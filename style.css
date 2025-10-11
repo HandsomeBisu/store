@@ -1,0 +1,17 @@
+body {
+    box-sizing: border-box;
+}
+.cart-bounce {
+    animation: bounce 0.3s ease-in-out;
+}
+@keyframes bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+.point-glow {
+    animation: glow 2s ease-in-out infinite alternate;
+}
+@keyframes glow {
+    from { box-shadow: 0 0 5px #38bdf8; }
+    to { box-shadow: 0 0 20px #38bdf8, 0 0 30px #38bdf8; }
+}

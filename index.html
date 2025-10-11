@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DPS Store</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-2xl font-bold text-sky-600">DPS Store</h1>
+                </div>
+                <div class="flex items-center space-x-6">
+                    <!-- Auth/User section -->
+                    <div id="nav-auth-container">
+                        <a href="login.html" id="loginBtn" class="text-sky-600 hover:text-sky-800 font-medium transition-colors">로그인</a>
+                        <div id="userProfile" class="hidden items-center space-x-4">
+                            <span id="userEmail" class="text-gray-600 text-sm"></span>
+                            <a href="#" id="logoutBtn" class="text-sm text-red-500 hover:text-red-700 font-medium transition-colors">로그아웃</a>
+                        </div>
+                    </div>
+
+                    <!-- Points -->
+                    <div class="flex items-center bg-gradient-to-r from-sky-400 to-blue-400 px-4 py-2 rounded-full point-glow">
+                        <span class="text-white font-bold">💰 <span id="userPoints">0</span>P</span>
+                    </div>
+
+                    <!-- Cart -->
+                    <button id="cartBtn" class="relative bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition-colors">
+                        🛒 장바구니 (<span id="cartCount">0</span>)
+                    </button>
+                </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Welcome Banner -->
+        <div class="bg-gradient-to-r from-sky-500 to-blue-500 text-white rounded-2xl p-8 mb-8">
+            <h2 class="text-3xl font-bold mb-2">포인트로 쇼핑하세요! 🎉</h2>
+            <p class="text-lg opacity-90">현금 없이도 원하는 상품을 구매할 수 있어요</p>
+        </div>
+
+        <!-- Categories -->
+        <div class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">카테고리</h3>
+            <div class="flex flex-wrap gap-4">
+                <button class="category-btn bg-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-shadow border-2 border-sky-200 hover:border-sky-400" data-category="all">
+                    🛍️ 전체
+                </button>
+                <button class="category-btn bg-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-shadow border-2 border-sky-200 hover:border-sky-400" data-category="electronics">
+                    📱 전자제품
+                </button>
+                <button class="category-btn bg-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-shadow border-2 border-sky-200 hover:border-sky-400" data-category="fashion">
+                    👕 패션
+                </button>
+                <button class="category-btn bg-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-shadow border-2 border-sky-200 hover:border-sky-400" data-category="food">
+                    🍔 식품
+                </button>
+                <button class="category-btn bg-white px-6 py-3 rounded-full shadow-md hover:shadow-lg transition-shadow border-2 border-sky-200 hover:border-sky-400" data-category="books">
+                    📚 도서
+                </button>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="mb-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">상품 목록</h3>
+            <div id="productsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Products will be inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Cart Modal -->
+    <div id="cartModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold text-gray-800">🛒 장바구니</h3>
+                        <button id="closeCart" class="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
+                    </div>
+                </div>
+                <div id="cartItems" class="p-6">
+                    <!-- Cart items will be inserted here -->
+                </div>
+                <div class="p-6 border-t bg-gray-50">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xl font-bold">총 필요 포인트:</span>
+                        <span id="totalPoints" class="text-2xl font-bold text-sky-600">0P</span>
+                    </div>
+                    <button id="checkoutBtn" class="w-full bg-gradient-to-r from-sky-500 to-blue-500 text-white py-3 rounded-lg font-bold text-lg hover:from-sky-600 hover:to-blue-600 transition-colors">
+                        포인트로 구매하기
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl max-w-md w-full p-8 text-center">
+                <div class="text-6xl mb-4">🎉</div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-2">구매 완료!</h3>
+                <p class="text-gray-600 mb-6">포인트로 성공적으로 구매하셨습니다.</p>
+                <button id="closeSuccess" class="bg-sky-600 text-white px-6 py-2 rounded-lg hover:bg-sky-700 transition-colors">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
