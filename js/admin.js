@@ -1,168 +1,228 @@
+document.addEventListener('DOMContentLoaded', () => {
+    const addProductForm = document.getElementById('add-product-form');
+    const submitButton = document.getElementById('submit-product');
+    const uploadStatus = document.getElementById('upload-status');
+    const colorOptionsContainer = document.getElementById('color-options-container');
+    const addColorOptionBtn = document.getElementById('add-color-option');
+    const sizeOptionsContainer = document.getElementById('size-options-container');
+    const addSizeOptionBtn = document.getElementById('add-size-option');
 
-import { app } from './firebase.js';
-import { auth, onAuthChange, signOutUser } from './auth.js';
-import {
-    getFirestore,
-    collection,
-    getDocs,
-    doc,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    serverTimestamp,
-    query,
-    orderBy
-} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+    let editMode = false;
+    let currentProductId = null;
 
-const db = getFirestore(app);
 
-// --- CONFIGURATION ---
-// In a real app, fetch this from a secure location in your database
-const ADMIN_UID = "2gJ3WkOPBBYSPe4I53YpDCc61jA2"; 
-
-// --- DOM Elements ---
-const adminContent = document.getElementById('admin-content');
-const authCheck = document.getElementById('auth-check');
-const productForm = document.getElementById('product-form');
-const productList = document.getElementById('product-list');
-const formTitle = document.getElementById('form-title');
-const submitBtn = document.getElementById('submit-btn');
-const cancelEditBtn = document.getElementById('cancel-edit-btn');
-const productIdField = document.getElementById('product-id');
-const logoutBtn = document.getElementById('logoutBtn');
-
-// --- AUTHENTICATION ---
-onAuthChange(user => {
-    if (user && user.uid === ADMIN_UID) {
-        // User is an admin
-        authCheck.classList.add('hidden');
-        adminContent.classList.remove('hidden');
-        initAdmin();
-    } else {
-        // User is not an admin or not logged in
-        authCheck.innerHTML = `
-            <h2 class="text-2xl font-bold text-red-600 mb-4">액세스 거부됨</h2>
-            <p class="text-gray-700">이 페이지에 접근할 권한이 없습니다.</p>
-            <a href="index.html" class="mt-6 inline-block bg-sky-600 text-white px-6 py-2 rounded-lg hover:bg-sky-700">상점으로 돌아가기</a>
+    // 색상 옵션 추가
+    addColorOptionBtn.addEventListener('click', () => {
+        const newColorOption = document.createElement('div');
+        newColorOption.classList.add('color-option');
+        newColorOption.innerHTML = `
+            <input type="text" placeholder="색상명" class="product-color" required>
+            <input type="file" class="color-image" accept="image/*" required>
+            <button type="button" class="remove-option-btn">삭제</button>
         `;
-    }
-});
-
-logoutBtn.addEventListener('click', async () => {
-    await signOutUser();
-    window.location.href = 'index.html';
-});
-
-// --- ADMIN INITIALIZATION ---
-async function initAdmin() {
-    await loadProducts();
-    setupEventListeners();
-}
-
-function setupEventListeners() {
-    productForm.addEventListener('submit', handleFormSubmit);
-    cancelEditBtn.addEventListener('click', resetForm);
-}
-
-// --- PRODUCT MANAGEMENT ---
-
-// Load products from Firestore and render them
-async function loadProducts() {
-    const productsRef = collection(db, "products");
-    const q = query(productsRef, orderBy("name")); // Order by name
-    const querySnapshot = await getDocs(q);
-
-    productList.innerHTML = ''; // Clear list
-    querySnapshot.forEach(doc => {
-        const product = { id: doc.id, ...doc.data() };
-        const productElement = createProductElement(product);
-        productList.appendChild(productElement);
+        colorOptionsContainer.appendChild(newColorOption);
     });
-}
 
-// Create HTML element for a single product
-function createProductElement(product) {
-    const div = document.createElement('div');
-    div.className = 'flex items-center justify-between bg-gray-50 p-4 rounded-lg';
-    div.innerHTML = `
-        <div>
-            <p class="font-bold text-lg">${product.name} <span class="text-sm font-normal text-gray-500">(${product.category})</span></p>
-            <p class="text-sky-600">${product.price.toLocaleString()}P</p>
-        </div>
-        <div class="space-x-4">
-            <button data-id="${product.id}" class="edit-btn text-blue-500 hover:underline">수정</button>
-            <button data-id="${product.id}" class="delete-btn text-red-500 hover:underline">삭제</button>
-        </div>
-    `;
+    // 사이즈 옵션 추가
+    addSizeOptionBtn.addEventListener('click', () => {
+        const newSizeOption = document.createElement('div');
+        newSizeOption.classList.add('size-option');
+        newSizeOption.innerHTML = `
+            <input type="text" placeholder="사이즈" class="product-size" required>
+            <button type="button" class="remove-option-btn">삭제</button>
+        `;
+        sizeOptionsContainer.appendChild(newSizeOption);
+    });
 
-    // Add event listeners for edit/delete buttons
-    div.querySelector('.edit-btn').addEventListener('click', () => populateFormForEdit(product));
-    div.querySelector('.delete-btn').addEventListener('click', () => deleteProduct(product.id, product.name));
+    // 삭제 버튼 이벤트 처리 (동적 생성 요소)
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-option-btn')) {
+            e.target.parentElement.remove();
+        }
+    });
 
-    return div;
-}
+    // 폼 제출 이벤트 처리 (상품 추가 또는 수정)
+    addProductForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
 
-// Handle form submission for both creating and updating products
-async function handleFormSubmit(e) {
-    e.preventDefault();
-    const productId = productIdField.value;
+        const productName = document.getElementById('product-name').value;
+        const productPrice = parseFloat(document.getElementById('product-price').value);
+        const productDescription = document.getElementById('product-description').value;
+        const colorOptions = colorOptionsContainer.querySelectorAll('.color-option');
+        const sizeOptions = sizeOptionsContainer.querySelectorAll('.size-option');
 
-    const productData = {
-        name: document.getElementById('name').value,
-        price: Number(document.getElementById('price').value),
-        category: document.getElementById('category').value,
-        emoji: document.getElementById('emoji').value,
-        description: document.getElementById('description').value,
-    };
+        if (!productName || !productPrice || colorOptions.length === 0 || sizeOptions.length === 0) {
+            alert('상품명, 가격, 색상, 사이즈는 필수 항목입니다.');
+            return;
+        }
 
-    if (productId) {
-        // Update existing product
-        const productRef = doc(db, "products", productId);
-        await updateDoc(productRef, productData);
-        alert('상품이 성공적으로 업데이트되었습니다.');
-    } else {
-        // Add new product
-        // For a new product, we should also add the 'id' field based on timestamp or a unique generator
-        productData.id = Date.now(); // Simple unique ID
-        await addDoc(collection(db, "products"), productData);
-        alert('상품이 성공적으로 추가되었습니다.');
+        uploadStatus.textContent = '업로드 중...';
+
+        try {
+            const colors = [];
+            for (const option of colorOptions) {
+                const colorName = option.querySelector('.product-color').value;
+                const imageFile = option.querySelector('.color-image').files[0];
+                const existingImageUrl = option.dataset.existingImage;
+
+                if (!colorName) {
+                    alert('모든 색상명을 입력해주세요.');
+                    uploadStatus.textContent = '';
+                    return;
+                }
+
+                if (imageFile) { // 새 이미지가 첨부된 경우에만 업로드
+                    const formData = new FormData();
+                    formData.append('file', imageFile);
+                    formData.append('upload_preset', 'dpflsite');
+                    const res = await fetch('https://api.cloudinary.com/v1_1/dfckxxocs/image/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await res.json();
+                    colors.push({ name: colorName, image: data.secure_url });
+                } else if (existingImageUrl) { // 기존 이미지가 있는 경우
+                    colors.push({ name: colorName, image: existingImageUrl });
+                } else {
+                    alert('이미지를 추가해주세요.');
+                    uploadStatus.textContent = '';
+                    return;
+                }
+            }
+
+            const sizes = Array.from(sizeOptions).map(opt => opt.querySelector('.product-size').value).filter(Boolean);
+            if (sizes.length === 0) {
+                alert('하나 이상의 사이즈를 입력해주세요.');
+                uploadStatus.textContent = '';
+                return;
+            }
+
+            const productData = {
+                name: productName,
+                price: productPrice,
+                description: productDescription,
+                colors: colors,
+                sizes: sizes,
+            };
+
+            if (editMode) {
+                // 수정 모드
+                await db.collection('products').doc(currentProductId).update(productData);
+                uploadStatus.textContent = '상품이 성공적으로 수정되었습니다!';
+            } else {
+                // 추가 모드
+                productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                await db.collection('products').add(productData);
+                uploadStatus.textContent = '상품이 성공적으로 추가되었습니다!';
+            }
+
+            resetForm();
+
+            setTimeout(() => {
+                uploadStatus.textContent = '';
+            }, 3000);
+
+        } catch (error) {
+            console.error('상품 처리 중 오류 발생:', error);
+            uploadStatus.textContent = `오류: ${error.message}`;
+        }
+    });
+
+    function resetForm() {
+        addProductForm.reset();
+        editMode = false;
+        currentProductId = null;
+        submitButton.textContent = '상품 추가하기';
+        colorOptionsContainer.innerHTML = `
+            <div class="color-option">
+                <input type="text" placeholder="색상명 (예: Red)" class="product-color" required>
+                <input type="file" class="color-image" accept="image/*" required>
+            </div>`;
+        sizeOptionsContainer.innerHTML = `
+            <div class="size-option">
+                <input type="text" placeholder="사이즈 (예: S)" class="product-size" required>
+            </div>`;
     }
 
-    await loadProducts();
-    resetForm();
-}
+    // --- 상품 관리 기능 추가 ---
+    const productListAdmin = document.getElementById('product-list-admin');
 
-// Delete a product
-async function deleteProduct(id, name) {
-    if (confirm(`정말로 '${name}' 상품을 삭제하시겠습니까?`)) {
-        await deleteDoc(doc(db, "products", id));
-        alert('상품이 삭제되었습니다.');
-        await loadProducts();
-        resetForm(); // If the deleted item was being edited
+    // 관리자 페이지 상품 목록 렌더링
+    function renderAdminProducts() {
+        db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+            productListAdmin.innerHTML = '';
+            if (snapshot.empty) {
+                productListAdmin.innerHTML = '<tr><td colspan="3">등록된 상품이 없습니다.</td></tr>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const product = { id: doc.id, ...doc.data() };
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${product.name}</td>
+                    <td>₩${product.price.toLocaleString()}</td>
+                    <td>
+                        <button class="btn-secondary edit-product-btn" data-id="${product.id}">수정</button>
+                        <button class="btn-danger delete-product-btn" data-id="${product.id}">삭제</button>
+                    </td>
+                `;
+                productListAdmin.appendChild(tr);
+            });
+        }, error => {
+            console.error("상품 로딩 중 에러 발생: ", error);
+            productListAdmin.innerHTML = '<tr><td colspan="3">상품을 불러오는 데 실패했습니다.</td></tr>';
+        });
     }
-}
 
-// Populate the form with data from the product to be edited
-function populateFormForEdit(product) {
-    formTitle.textContent = '상품 수정';
-    submitBtn.textContent = '수정 완료';
-    cancelEditBtn.classList.remove('hidden');
+    // 상품 수정 및 삭제 이벤트 처리
+    productListAdmin.addEventListener('click', async (e) => {
+        const target = e.target;
+        const productId = target.dataset.id;
 
-    productIdField.value = product.id;
-    document.getElementById('name').value = product.name;
-    document.getElementById('price').value = product.price;
-    document.getElementById('category').value = product.category;
-    document.getElementById('emoji').value = product.emoji;
-    document.getElementById('description').value = product.description;
+        if (target.classList.contains('delete-product-btn')) {
+            // 삭제 처리
+            if (confirm('정말로 이 상품을 삭제하시겠습니까?')) {
+                try {
+                    await db.collection('products').doc(productId).delete();
+                } catch (error) {
+                    console.error('상품 삭제 중 오류 발생:', error);
+                    alert('상품 삭제에 실패했습니다.');
+                }
+            }
+        } else if (target.classList.contains('edit-product-btn')) {
+            // 수정 처리
+            const doc = await db.collection('products').doc(productId).get();
+            if (!doc.exists) return;
 
-    window.scrollTo(0, 0); // Scroll to top to see the form
-}
+            const product = doc.data();
+            
+            document.getElementById('product-name').value = product.name;
+            document.getElementById('product-price').value = product.price;
+            document.getElementById('product-description').value = product.description;
 
-// Reset the form to its initial state for adding a new product
-function resetForm() {
-    formTitle.textContent = '새 상품 추가';
-    submitBtn.textContent = '상품 추가';
-    cancelEditBtn.classList.add('hidden');
-    productForm.reset();
-    productIdField.value = '';
-}
+            colorOptionsContainer.innerHTML = product.colors.map(color => `
+                <div class="color-option" data-existing-image="${color.image}">
+                    <input type="text" placeholder="색상명" class="product-color" value="${color.name}" required>
+                    <input type="file" class="color-image" accept="image/*">
+                    <p class="existing-image-info">기존 이미지: <a href="${color.image}" target="_blank">보기</a></p>
+                    <button type="button" class="remove-option-btn">삭제</button>
+                </div>
+            `).join('');
+
+            sizeOptionsContainer.innerHTML = product.sizes.map(size => `
+                <div class="size-option">
+                    <input type="text" placeholder="사이즈" class="product-size" value="${size}" required>
+                    <button type="button" class="remove-option-btn">삭제</button>
+                </div>
+            `).join('');
+
+            editMode = true;
+            currentProductId = productId;
+            submitButton.textContent = '상품 수정하기';
+            window.scrollTo(0, 0); // 페이지 상단으로 스크롤
+        }
+    });
+
+    // 초기 상품 목록 렌더링
+    renderAdminProducts();
+});

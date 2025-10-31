@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DPS Store</title>
-    <meta property="og:image" content="assets/logo.png">
-    <link rel="icon" href="assets/logo.png" type="image/png">
+    <title>상품 상세 - DPS Store</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
@@ -14,7 +12,7 @@
     <div class="mobile-header">
         <a href="index.html" class="logo-mobile-header"><img src="assets/logo.png" alt="DPS Store Logo" class="logo-image"></a>
         <div class="search-bar-mobile">
-            <input type="search" placeholder="DPS 후드/후드집업 출시" class="search-input">
+            <input type="search" placeholder="상품 검색..." class="search-input">
         </div>
     </div>
 
@@ -22,15 +20,11 @@
         <nav class="top-nav">
             <div class="nav-container">
                 <a href="index.html" class="logo"><img src="assets/logo.png" alt="DPS Store Logo" class="logo-image"></a>
-                <button class="hamburger-menu" id="hamburger-menu">&#9776;</button>
-                <ul class="nav-links" id="nav-links">
-                    <li><a href="index.html" class="active">홈</a></li>
+                <ul class="nav-links">
+                    <li><a href="index.html">홈</a></li>
                     <li><a href="#">고객센터</a></li>
                 </ul>
                 <div class="nav-icons">
-                    <div id="auth-container">
-                        <button id="login-btn" class="btn">Google 로그인</button>
-                    </div>
                     <a href="cart.html" class="cart-icon">
                         <span class="material-symbols-outlined">shopping_cart</span>
                         <span class="cart-count">0</span>
@@ -47,19 +41,10 @@
         </div>
     </div>
 
-    <section class="hero">
-        <div class="hero-content">
-            <h1 class="hero-title">New Arrivals</h1>
-            <p class="hero-subtitle">Check out our latest products</p>
-            <a href="#" class="btn">Shop Now</a>
-        </div>
-    </section>
-
     <main>
         <div class="container">
-            <h1>상품 목록</h1>
-            <div id="product-list" class="product-list">
-                <!-- 상품 목록이 여기에 동적으로 채워집니다. -->
+            <div id="product-detail-container" class="product-detail-container">
+                <!-- 상품 상세 정보가 여기에 동적으로 채워집니다. -->
             </div>
         </div>
     </main>
@@ -79,12 +64,12 @@
     <!-- Marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
-    <script src="js/products.js"></script>
-    <script src="js/main.js"></script>
+    <!-- Custom Scripts -->
+    <script src="js/product-detail.js"></script>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="bottom-nav-mobile">
-        <a href="index.html" class="nav-item active">
+        <a href="index.html" class="nav-item">
             <span class="material-symbols-outlined">home</span>
             <span class="nav-label">홈</span>
         </a>
