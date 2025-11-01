@@ -1,0 +1,308 @@
+:root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --muted:#6b7280;
+      --accent:#2b6ef6; /* toss-ish blue */
+      --accent-2:#111827; /* dark text */
+      --success:#08a05b;
+      --danger:#ef4444;
+      --glass: rgba(255,255,255,0.6);
+      --shadow: 0 6px 18px rgba(17,24,39,0.08);
+      --radius:14px;
+    }
+    .payment-page-body{
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      margin:0;background:var(--bg);color:var(--accent-2);-webkit-font-smoothing:antialiased;padding:48px;display:flex;align-items:center;justify-content:center;
+    }
+
+    .wrap{width:100%;max-width:1100px;display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:start}
+
+    /* Left - main form (Musinsa product + checkout) */
+    .panel{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px}
+    .brand{display:flex;align-items:center;gap:12px}
+    .logo{width:46px;height:46px;border-radius:10px;background:linear-gradient(135deg,#34d399,#60a5fa);display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
+    .brand h1{font-size:18px;margin:0}
+    .brand p{margin:0;color:var(--muted);font-size:13px}
+
+    /* Product Slider */
+    .product-slider-container {
+      position: relative;
+      overflow: hidden;
+      margin-top: 18px;
+      width: 100%; /* Ensure container takes full width */
+      max-width: 500px; /* Limit max width for better appearance */
+      margin-left: auto; /* Center the slider */
+      margin-right: auto;
+    }
+
+    .product-slider-wrapper {
+      display: flex;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    .product-slide {
+      flex: 0 0 100%; /* Each slide takes full width of its wrapper */
+      display: flex;
+      gap: 20px;
+      padding-right: 20px; /* Gap between slides, adjusted by JS transform */
+      box-sizing: border-box; /* Include padding in element's total width */
+    }
+
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      padding: 10px;
+      cursor: pointer;
+      z-index: 10;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      opacity: 0; /* Hidden by default */
+      transition: opacity 0.3s ease;
+    }
+
+    .product-slider-container:hover .slider-btn {
+      opacity: 1; /* Visible on hover */
+    }
+
+    .slider-btn.prev-btn {
+      left: 10px;
+    }
+
+    .slider-btn.next-btn {
+      right: 10px;
+    }
+
+    .slider-btn:hover {
+      background-color: rgba(0, 0, 0, 0.8);
+    }
+
+    .thumb{width:150px;height:150px;border-radius:12px;background:linear-gradient(180deg,#fff,#f3f4f6);overflow:hidden;display:flex;align-items:center;justify-content:center;border:1px solid #eef2ff}
+    .thumb img{width:100%;height:100%;object-fit:cover}
+    .prod-info{flex:1}
+    .prod-title{font-weight:700;font-size:18px;margin-bottom:6px}
+    .prod-sub{color:var(--muted);font-size:13px;margin-bottom:12px}
+    .price{font-size:20px;font-weight:800}
+    .muted-small{color:var(--muted);font-size:13px}
+
+    .divider{height:1px;background:#f3f4f6;margin:20px 0;border-radius:4px}
+
+    /* Bank transfer card */
+    .pay-card{display:flex;flex-direction:column;gap:14px}
+    .pay-option{display:flex;align-items:center;justify-content:space-between}
+    .bank-box{display:flex;gap:12px;align-items:center}
+    .bank-logo{width:48px;height:32px;border-radius:8px;background:#f8fafc;border:1px solid #eef2ff;display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--muted)}
+    .bank-name{font-weight:600}
+
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+    input[type=text], input[type=tel], input[type=number], select{
+      width:100%;padding:12px;border-radius:10px;border:1px solid #e6edf3;background:transparent;font-size:14px;outline:none
+    }
+    .hint{font-size:12px;color:var(--muted)}
+
+    .account-box{background:#fafafa;border-radius:12px;padding:14px;border:1px dashed #e6edf3;display:flex;align-items:center;justify-content:space-between}
+    .acc-left{display:flex;flex-direction:column;gap:6px}
+    .acc-number{font-weight:700;font-size:16px;letter-spacing:1px}
+    .acc-bank{font-size:13px;color:var(--muted)}
+    .acc-actions{display:flex;gap:8px}
+    .btn{border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer}
+    .btn-ghost{background:black;border:1px solid black;color:white;}
+    .btn-primary{background:var(--accent);color:white}
+    .btn-copy{background:black;border:1px solid black;padding:4px 8px;border-radius:8px;color:white;}
+
+    .notice{background:linear-gradient(180deg,#fff6ed,#fff);border-left:4px solid #ffb366;padding:12px;border-radius:10px;font-size:13px}
+
+    /* Right - order summary */
+    .summary{background:linear-gradient(180deg,rgba(255,255,255,0.9),var(--card));border-radius:var(--radius);padding:22px;position:sticky;top:48px;height:fit-content}
+    .summary h3{margin:0 0 8px 0}
+    .summary-row{display:flex;justify-content:space-between;margin:10px 0;color:var(--muted)}
+    .total{display:flex;justify-content:space-between;align-items:center;margin-top:18px;font-size:18px;font-weight:800}
+
+    .timer{font-weight:700;color:var(--danger)}
+
+    /* footer actions */
+    .actions{display:flex;gap:12px;margin-top:18px}
+
+    /* responsive */
+    @media (max-width:980px){
+      .payment-page-body{padding:20px}
+      .wrap{grid-template-columns:1fr;}
+      .summary{position:static}
+    }
+
+
+/* ===== 모바일 전용 CSS (max-width: 768px) ===== */
+@media only screen and (max-width: 768px) {
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  .payment-page-body {
+    padding: 16px 16px 120px; /* 하단 버튼 공간 확보 */
+    background: var(--bg);
+    color: var(--accent-2);
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto;
+    overflow-x: hidden;
+  }
+
+  .wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* 모바일에서 주문 요약을 결제 섹션 위로 이동 */
+  .summary {
+    order: -1; /* 결제보다 먼저 표시 */
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .panel {
+    order: 0;
+    width: 100%;
+    max-width: 100%;
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 20px;
+    background: var(--card);
+  }
+
+  /* 브랜드 영역 */
+  .brand {
+    gap: 10px;
+  }
+  .logo {
+    width: 38px;
+    height: 38px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+  .brand h1 { font-size: 15px; }
+  .brand p { font-size: 12px; }
+
+  /* 상품 슬라이더 */
+  .product-slider-container {
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .product-slide {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+  }
+  .thumb {
+    width: 120px;
+    height: 120px;
+  }
+
+  /* 입력 폼 */
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    width: 100%;
+  }
+  label {
+    font-size: 12px;
+  }
+  input[type=text],
+  input[type=tel],
+  input[type=number],
+  select {
+    width: 100%;
+    padding: 10px;
+    font-size: 13px;
+    border-radius: 8px;
+  }
+
+  /* 계좌 박스 */
+  .account-box {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .acc-actions {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  /* 버튼 */
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    flex: 1;
+    text-align: center;
+    padding: 10px 12px;
+    font-size: 14px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+
+  /* 하단 고정 결제 버튼 */
+  .actions {
+    position: fixed;
+    bottom: env(safe-area-inset-bottom, 0);
+    left: 0;
+    right: 0;
+    width: 100%;
+    background: var(--card);
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0));
+    box-shadow: 0 -3px 12px rgba(0,0,0,0.05);
+    border-top: 1px solid #eee;
+    margin: 0;
+    display: flex;
+    gap: 8px;
+    z-index: 100;
+    box-sizing: border-box;
+  }
+
+  .actions .btn-primary {
+    flex: 1;
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 10px;
+  }
+
+  /* 요약 섹션 폰트 크기 조정 */
+  .summary h3 {
+    font-size: 14px;
+  }
+  .summary-row,
+  .total {
+    font-size: 13px;
+  }
+  .timer {
+    font-size: 12px;
+  }
+}

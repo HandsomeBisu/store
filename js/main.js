@@ -1,43 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
     const productList = document.getElementById('product-list');
     const authContainer = document.getElementById('auth-container');
-    const cartCountElements = document.querySelectorAll('.cart-count');
     const hamburgerMenu = document.getElementById('hamburger-menu');
     const navLinks = document.getElementById('nav-links');
 
     let currentUser = null;
 
     // 햄버거 메뉴 토글
-    hamburgerMenu.addEventListener('click', () => {
-        navLinks.classList.toggle('active');
-    });
+    if (hamburgerMenu) {
+        hamburgerMenu.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+    }
 
     // 사용자 로그인 상태 감지
     auth.onAuthStateChanged(user => {
         currentUser = user;
         updateAuthUI(user);
-        if (user) {
-            // 로그인 시 사용자의 장바구니 정보 실시간 감지
-            listenToCartChanges(user.uid);
-        } else {
-            // 로그아웃 시 장바구니 카운트 초기화
-            updateCartCount(0);
-        }
     });
 
     // 로그인/로그아웃 UI 업데이트
     function updateAuthUI(user) {
         if (user) {
-            // 로그인 상태: 사용자 이름과 로그아웃 버튼 표시
             authContainer.innerHTML = `
                 <span class="user-display-name">${user.displayName || 'User'}</span>
                 <button id="logout-btn" class="btn btn-secondary">로그아웃</button>
             `;
             document.getElementById('logout-btn').addEventListener('click', () => {
-                auth.signOut().then(() => console.log('로그아웃 성공'));
+                auth.signOut().then(() => {
+                    localStorage.removeItem('cart'); // 로그아웃 시 로컬 스토리지 장바구니 비우기
+                });
             });
         } else {
-            // 로그아웃 상태: 로그인 버튼 표시
             authContainer.innerHTML = `<button id="login-btn" class="btn">Google 로그인</button>`;
             document.getElementById('login-btn').addEventListener('click', () => {
                 const provider = new firebase.auth.GoogleAuthProvider();
@@ -46,32 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Firestore의 장바구니 변경사항을 실시간으로 감지
-    function listenToCartChanges(userId) {
-        db.collection('carts').doc(userId).onSnapshot(doc => {
-            if (doc.exists) {
-                const items = doc.data().items || [];
-                const totalCount = items.reduce((sum, item) => sum + item.quantity, 0);
-                updateCartCount(totalCount);
-            } else {
-                updateCartCount(0);
-            }
-        });
-    }
+    let productSlidersIntervals = [];
 
-    // 장바구니 아이콘 카운트 업데이트
-    function updateCartCount(count) {
-        cartCountElements.forEach(el => el.textContent = count);
-    }
-
-    let productSlidersIntervals = []; // 슬라이더 인터벌 ID를 저장할 배열
-
-    // 상품 목록 렌더링 (Firestore에서 실시간으로 가져오기)
+    // 상품 목록 렌더링
     function renderProducts() {
+        if (!productList) return;
         productList.innerHTML = '<p>상품을 불러오는 중...</p>';
         
         db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-            // 기존 인터벌 클리어
             productSlidersIntervals.forEach(clearInterval);
             productSlidersIntervals = [];
 
@@ -107,16 +83,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 productList.appendChild(productCard);
             });
 
-            // 상품 카드 클릭 시 상세 페이지로 이동
             document.querySelectorAll('.product-card').forEach(card => {
                 card.addEventListener('click', (e) => {
                     if (e.target.closest('button')) return;
-                    const productId = card.dataset.productId;
-                    window.location.href = `product-detail.html?id=${productId}`;
+                    window.location.href = `product-detail.html?id=${card.dataset.productId}`;
                 });
             });
 
-            initializeProductSliders(); // 슬라이더 초기화
+            initializeProductSliders();
             bindProductActionButtons();
 
         }, error => {
@@ -125,7 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // 상품 이미지 슬라이더 초기화 (무한 루프)
     function initializeProductSliders() {
         document.querySelectorAll('.product-image-container').forEach(container => {
                 const sliderWrapper = container.querySelector('.image-slider-wrapper');
@@ -157,62 +130,86 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-
-    // 상품 카드 내 버튼들의 이벤트 리스너를 바인딩하는 함수
     function bindProductActionButtons() {
-        // '장바구니에 추가' 버튼 이벤트 리스너
         document.querySelectorAll('.add-to-cart-btn').forEach(button => {
             button.addEventListener('click', (e) => {
-                e.stopPropagation(); // 이벤트 버블링 방지
+                e.stopPropagation();
                 if (currentUser) {
                     const productId = e.target.dataset.id;
-                    addToCart(currentUser.uid, productId);
+                    // 기본 옵션으로 장바구니에 추가
+                    addProductToCartById(productId);
                 } else {
-                    alert('장바구니에 상품을 추가하려면 먼저 로그인해주세요.');
+                    alert('로그인이 필요합니다.');
                 }
             });
         });
 
-        // '바로 구매' 버튼 이벤트 리스너
         document.querySelectorAll('.buy-now-btn').forEach(button => {
-            button.addEventListener('click', async (e) => {
-                e.stopPropagation(); // 이벤트 버블링 방지
+            button.addEventListener('click', (e) => {
+                e.stopPropagation();
                 if (currentUser) {
                     const productId = e.target.dataset.id;
-                    await addToCart(currentUser.uid, productId);
-                    window.location.href = 'cart.html'; // 장바구니 페이지로 이동
+                    buyNowById(productId);
                 } else {
-                    alert('상품을 구매하려면 먼저 로그인해주세요.');
+                    alert('로그인이 필요합니다.');
                 }
             });
         });
     }
 
-    // Firestore에 장바구니 아이템 추가/업데이트
-    async function addToCart(userId, productId) {
-        const cartRef = db.collection('carts').doc(userId);
-        const doc = await cartRef.get();
-
+    async function addProductToCartById(productId) {
+        const productRef = db.collection('products').doc(productId);
+        const doc = await productRef.get();
         if (doc.exists) {
-            // 장바구니 문서가 존재할 경우
-            const currentItems = doc.data().items || [];
-            const itemIndex = currentItems.findIndex(item => item.productId === productId);
+            const product = { id: doc.id, ...doc.data() };
+            // 기본 옵션 (첫 번째 색상, 첫 번째 사이즈)으로 추가
+            const defaultColor = product.colors[0];
+            const defaultSize = product.sizes[0];
+
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const itemIndex = cart.findIndex(item => item.id === productId && item.color === defaultColor.name && item.size === defaultSize);
 
             if (itemIndex > -1) {
-                // 이미 있는 상품이면 수량 증가
-                currentItems[itemIndex].quantity += 1;
+                cart[itemIndex].quantity++;
             } else {
-                // 없는 상품이면 새로 추가
-                currentItems.push({ productId: productId, quantity: 1 });
+                cart.push({
+                    id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    color: defaultColor.name,
+                    size: defaultSize,
+                    image: defaultColor.image,
+                    quantity: 1
+                });
             }
-            await cartRef.update({ items: currentItems });
-        } else {
-            // 장바구니 문서가 없으면 새로 생성
-            await cartRef.set({ items: [{ productId: productId, quantity: 1 }] });
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert('장바구니에 상품이 추가되었습니다.');
         }
-        console.log(`상품(ID: ${productId})이 장바구니에 추가되었습니다.`);
     }
 
-    // 초기 상품 렌더링
+    async function buyNowById(productId) {
+        const productRef = db.collection('products').doc(productId);
+        const doc = await productRef.get();
+        if (doc.exists) {
+            const product = { id: doc.id, ...doc.data() };
+            const defaultColor = product.colors[0];
+            const defaultSize = product.sizes[0];
+
+            const buyNowItem = {
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                color: defaultColor.name,
+                size: defaultSize,
+                image: defaultColor.image,
+                quantity: 1
+            };
+            
+            sessionStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
+            window.location.href = 'payment.html';
+        }
+    }
+
+    // 초기화
     renderProducts();
 });

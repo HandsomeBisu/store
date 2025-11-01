@@ -111,17 +111,6 @@ a {
     align-items: center;
 }
 
-.cart-count {
-    position: absolute;
-    top: -8px;
-    right: -12px;
-    background-color: var(--accent-color);
-    color: white;
-    border-radius: 50%;
-    padding: 2px 6px;
-    font-size: 0.75rem;
-    font-weight: bold;
-}
 
 #auth-container {
     display: flex;
@@ -394,6 +383,13 @@ main h1 {
     transition: background-color 0.3s ease, transform 0.2s ease-out;
     width: 100%;
     text-align: center;
+}
+
+.btn.disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    transform: none;
 }
 
 .btn:hover {
@@ -762,7 +758,6 @@ main h1 {
     .quantity-btn {
         width: 22px;
         height: 22px;
-        font-size: 0.9rem;
     }
 
     .cart-summary .cart-total {
@@ -847,11 +842,6 @@ main h1 {
     gap: 1.5rem;
 }
 
-.option-group {
-    display: flex;
-    flex-direction: column;
-}
-
 .option-group label {
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -926,6 +916,73 @@ main h1 {
     width: 100%;
 }
 
+/* Payment Page */
+.payment-container {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.payment-form {
+    flex: 2;
+}
+
+.order-summary {
+    flex: 1;
+    background-color: var(--surface-color);
+    padding: 2rem;
+    border-radius: 12px;
+}
+
+.order-summary h2 {
+    margin-top: 0;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+}
+
+.order-summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+}
+
+.order-total {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    font-size: 1.2rem;
+    text-align: right;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+}
+
+.form-group-row {
+    display: flex;
+    gap: 1rem;
+}
+
+.form-group-row .form-group {
+    flex: 1;
+}
+
+
 @media screen and (max-width: 768px) {
     .product-main-section {
         flex-direction: column;
@@ -964,5 +1021,9 @@ main h1 {
     .product-full-description {
         font-size: 0.9rem;
         padding-top: 1.5rem;
+    }
+
+    .payment-container {
+        flex-direction: column;
     }
 }
