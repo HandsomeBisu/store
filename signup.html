@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 - DPS Store</title>
-    <meta property="og:image" content="assets/logo.png">
-    <link rel="icon" href="assets/logo.png" type="image/png">
+    <meta property="og:image" content="assets/storelogo.png">
+    <link rel="icon" href="assets/icon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
@@ -35,7 +35,10 @@
                     <label for="confirmPassword">비밀번호 확인</label>
                     <input type="password" id="confirmPassword" minlength="6" required>
                 </div>
-                <button type="submit" class="btn">회원가입</button>
+                <button type="submit" id="signupSubmitBtn" class="btn" data-loading-text="회원가입 중...">
+                    <span>회원가입</span>
+                    <span class="loading-spinner hidden"></span>
+                </button>
             </form>
 
             <div class="auth-links">
@@ -55,10 +58,28 @@
         import { signUpWithEmail } from './js/auth.js';
 
         const authForm = document.getElementById('authForm');
+        const signupSubmitBtn = document.getElementById('signupSubmitBtn');
         const authError = document.getElementById('authError');
+
+        const toggleLoading = (button, isLoading) => {
+            const buttonTextSpan = button.querySelector('span:not(.loading-spinner)');
+            const spinnerSpan = button.querySelector('.loading-spinner');
+            if (isLoading) {
+                buttonTextSpan.classList.add('hidden');
+                spinnerSpan.classList.remove('hidden');
+                button.disabled = true;
+            } else {
+                buttonTextSpan.classList.remove('hidden');
+                spinnerSpan.classList.add('hidden');
+                button.disabled = false;
+            }
+        };
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            toggleLoading(signupSubmitBtn, true);
+            authError.classList.add('hidden'); // Hide previous errors
+
             const displayName = document.getElementById('displayName').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -68,6 +89,7 @@
                 authError.textContent = "비밀번호가 일치하지 않습니다.";
                 authError.classList.remove('hidden');
                 authError.classList.add('active');
+                toggleLoading(signupSubmitBtn, false);
                 return;
             }
 
@@ -80,6 +102,7 @@
             } else {
                 window.location.href = 'email-verification-needed.html';
             }
+            toggleLoading(signupSubmitBtn, false);
         });
     </script>
 </body>

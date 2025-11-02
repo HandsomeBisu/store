@@ -24,7 +24,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 로그인/로그아웃 UI 업데이트
     function updateAuthUI(user) {
         if (user) {
-            authContainer.innerHTML = `<button id="logout-btn" class="btn btn-secondary">로그아웃</button>`;
+            authContainer.innerHTML = `
+                <span class="user-display-name">${user.displayName || 'User'}</span>
+                <button id="logout-btn" class="btn btn-secondary">로그아웃</button>
+            `;
             document.getElementById('logout-btn').addEventListener('click', () => {
                 auth.signOut();
             });

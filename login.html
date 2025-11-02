@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>로그인 - DPS Store</title>
-    <meta property="og:image" content="assets/logo.png">
-    <link rel="icon" href="assets/logo.png" type="image/png">
+    <meta property="og:image" content="assets/storelogo.png">
+    <link rel="icon" href="assets/icon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
@@ -26,7 +26,10 @@
                     <label for="password">비밀번호</label>
                     <input type="password" id="password" required>
                 </div>
-                <button type="submit" class="btn">로그인</button>
+                <button type="submit" id="loginSubmitBtn" class="btn" data-loading-text="로그인 중...">
+                    <span>로그인</span>
+                    <span class="loading-spinner hidden"></span>
+                </button>
             </form>
 
             <div class="auth-links">
@@ -53,11 +56,29 @@
         import { signInWithEmail, signInWithGoogle } from './js/auth.js';
 
         const authForm = document.getElementById('authForm');
+        const loginSubmitBtn = document.getElementById('loginSubmitBtn');
         const googleSignInBtn = document.getElementById('googleSignInBtn');
         const authError = document.getElementById('authError');
 
+        const toggleLoading = (button, isLoading) => {
+            const buttonTextSpan = button.querySelector('span:not(.loading-spinner)');
+            const spinnerSpan = button.querySelector('.loading-spinner');
+            if (isLoading) {
+                buttonTextSpan.classList.add('hidden');
+                spinnerSpan.classList.remove('hidden');
+                button.disabled = true;
+            } else {
+                buttonTextSpan.classList.remove('hidden');
+                spinnerSpan.classList.add('hidden');
+                button.disabled = false;
+            }
+        };
+
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            toggleLoading(loginSubmitBtn, true);
+            authError.classList.add('hidden'); // Hide previous errors
+
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             const result = await signInWithEmail(email, password);
@@ -69,9 +90,13 @@
             } else {
                 window.location.href = 'index.html';
             }
+            toggleLoading(loginSubmitBtn, false);
         });
 
         googleSignInBtn.addEventListener('click', async () => {
+            toggleLoading(googleSignInBtn, true);
+            authError.classList.add('hidden'); // Hide previous errors
+
             const result = await signInWithGoogle();
             if (result.error) {
                 authError.textContent = "Google 로그인 중 오류가 발생했습니다.";
@@ -80,6 +105,7 @@
             } else {
                 window.location.href = 'index.html';
             }
+            toggleLoading(googleSignInBtn, false);
         });
     </script>
 </body>

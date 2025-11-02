@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.getElementById('nav-links');
 
     let currentUser = null;
+    let productSlidersIntervals = [];
 
     // 햄버거 메뉴 토글
     if (hamburgerMenu) {
@@ -40,7 +41,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    let productSlidersIntervals = [];
+    // Hero Slider Logic
+    const heroSlider = document.querySelector('.hero-slider');
+    if (heroSlider) {
+        const slides = heroSlider.querySelectorAll('.slide');
+        const dots = heroSlider.querySelectorAll('.slider-dots .dot');
+        let currentSlide = 0;
+
+        function showSlide(index) {
+            slides.forEach((slide, i) => {
+                slide.classList.remove('active');
+                if (i === index) {
+                    slide.classList.add('active');
+                }
+            });
+            dots.forEach((dot, i) => {
+                dot.classList.remove('active');
+                if (i === index) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % slides.length;
+            showSlide(currentSlide);
+        }
+
+        // Initial display
+        showSlide(currentSlide);
+
+        // Auto slide change
+        setInterval(nextSlide, 5000); // Change slide every 5 seconds
+
+        // Dot navigation
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                currentSlide = index;
+                showSlide(currentSlide);
+            });
+        });
+    }
 
     // 상품 목록 렌더링
     function renderProducts() {
@@ -50,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
         onSnapshot(q, snapshot => {
             productSlidersIntervals.forEach(clearInterval);
-            productSlidersIntervals = [];
+
 
             if (snapshot.empty) {
                 productList.innerHTML = '<p>등록된 상품이 없습니다.</p>';
@@ -175,6 +216,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+
+    // Search functionality
+    const mobileSearchInput = document.getElementById('mobile-search-input');
+    const pcSearchInput = document.getElementById('pc-search-input');
+    const mobileSearchIcon = document.querySelector('.mobile-header .search-icon');
+    const pcSearchIcon = document.querySelector('.search-bar-pc .search-icon');
+
+    function handleSearch(inputElement) {
+        const query = inputElement.value.trim();
+        if (query) {
+            window.location.href = `search-results.html?query=${encodeURIComponent(query)}`;
+        }
+    }
+
+    if (mobileSearchInput) {
+        mobileSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch(mobileSearchInput);
+            }
+        });
+    }
+
+    if (mobileSearchIcon) {
+        mobileSearchIcon.addEventListener('click', () => {
+            handleSearch(mobileSearchInput);
+        });
+    }
+
+    if (pcSearchInput) {
+        pcSearchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch(pcSearchInput);
+            }
+        });
+    }
+
+    if (pcSearchIcon) {
+        pcSearchIcon.addEventListener('click', () => {
+            handleSearch(pcSearchInput);
+        });
+    }
 
     renderProducts();
 });

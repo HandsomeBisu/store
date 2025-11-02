@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>결제 — DPS Store</title>
-  <meta property="og:image" content="assets/logo.png">
-  <link rel="icon" href="assets/logo.png" type="image/png">
+  <meta property="og:image" content="assets/storelogo.png">
+  <link rel="icon" href="assets/icon.png" type="image/png">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="payment.css">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
@@ -119,6 +119,17 @@
         <!-- Summary items will be dynamically inserted here -->
       </div>
       <div class="divider"></div>
+      <div class="coupon-section">
+        <label for="coupon-input">쿠폰 코드</label>
+        <div style="display:flex; gap: 8px;">
+          <input type="text" id="coupon-input" placeholder="쿠폰 코드를 입력하세요" style="flex-grow: 1;">
+          <button class="btn btn-secondary" id="apply-coupon-btn">적용</button>
+        </div>
+        <p id="coupon-status" style="margin-top: 8px; font-size: 0.9em; color: #e74c3c;"></p>
+      </div>
+      <div class="divider"></div>
+      <div class="total"><span>상품 금액</span><span>₩ <strong id="summarySubtotal">0</strong></span></div>
+      <div class="total"><span>할인 금액</span><span>₩ <strong id="summaryDiscount">0</strong></span></div>
       <div class="total"><span>결제 예정금액</span><span>₩ <strong id="summaryTotal">0</strong></span></div>
 
       <div style="margin-top:18px">

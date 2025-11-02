@@ -1,7 +1,23 @@
 import { db } from './firebase.js';
+import { onAuthChange } from './auth.js';
 import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
+const ADMIN_UID = '6QEjtptLkwVeFOQB3cOjU12yvAA3';
+
 document.addEventListener('DOMContentLoaded', () => {
+    onAuthChange(user => {
+        if (user && user.uid === ADMIN_UID) {
+            // 사용자가 어드민일 경우, 관리자 페이지 기능 초기화
+            initializeAdminPage();
+        } else {
+            // 어드민이 아닐 경우, 홈페이지로 리디렉션
+            alert('접근 권한이 없습니다.');
+            window.location.href = 'index.html';
+        }
+    });
+});
+
+function initializeAdminPage() {
     const addProductForm = document.getElementById('add-product-form');
     const submitButton = document.getElementById('submit-product');
     const uploadStatus = document.getElementById('upload-status');
@@ -12,6 +28,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let editMode = false;
     let currentProductId = null;
+
+    // Category management
+    const adminCategoryButtons = document.querySelectorAll('.admin-category-btn');
+    const adminSections = document.querySelectorAll('.admin-section');
+
+    function showCategory(category) {
+        adminSections.forEach(section => {
+            section.style.display = 'none';
+        });
+        document.getElementById(`${category}-section`).style.display = 'block';
+
+        adminCategoryButtons.forEach(button => {
+            button.classList.remove('active');
+        });
+        document.querySelector(`.admin-category-btn[data-category="${category}"]`).classList.add('active');
+
+        // Render content for the selected category
+        if (category === 'product-management') {
+            renderAdminProducts();
+        } else if (category === 'coupon-management') {
+            renderCoupons();
+        } else if (category === 'order-management') {
+            renderOrders();
+        }
+    }
+
+    adminCategoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            showCategory(button.dataset.category);
+        });
+    });
+
+    // Initial display
+    showCategory('product-management');
 
 
     // 색상 옵션 추가
@@ -238,12 +288,96 @@ document.addEventListener('DOMContentLoaded', () => {
     // 초기 상품 목록 렌더링
     renderAdminProducts();
 
+    // --- 쿠폰 관리 기능 추가 ---
+    const addCouponForm = document.getElementById('add-coupon-form');
+    const couponCodeInput = document.getElementById('coupon-code');
+    const discountPercentageInput = document.getElementById('discount-percentage');
+    const couponQuantityInput = document.getElementById('coupon-quantity');
+    const couponListAdmin = document.getElementById('coupon-list-admin');
+
+    // 쿠폰 목록 렌더링
+    function renderCoupons() {
+        const q = query(collection(db, 'coupons'), orderBy('code'));
+        onSnapshot(q, snapshot => {
+            couponListAdmin.innerHTML = '';
+            if (snapshot.empty) {
+                couponListAdmin.innerHTML = '<tr><td colspan="4">등록된 쿠폰이 없습니다.</td></tr>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const coupon = { id: doc.id, ...doc.data() };
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${coupon.code}</td>
+                    <td>${coupon.discountPercentage}%</td>
+                    <td>${coupon.quantity}</td>
+                    <td>
+                        <button class="btn-danger delete-coupon-btn" data-id="${coupon.id}">삭제</button>
+                    </td>
+                `;
+                couponListAdmin.appendChild(tr);
+            });
+        }, error => {
+            console.error("쿠폰 로딩 중 에러 발생: ", error);
+            couponListAdmin.innerHTML = '<tr><td colspan="4">쿠폰을 불러오는 데 실패했습니다.</td></tr>';
+        });
+    }
+
+    // 쿠폰 추가 이벤트 처리
+    addCouponForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const code = couponCodeInput.value.trim();
+        const discountPercentage = parseFloat(discountPercentageInput.value);
+        const quantity = parseInt(couponQuantityInput.value);
+
+        if (!code || isNaN(discountPercentage) || discountPercentage < 1 || discountPercentage > 100 || isNaN(quantity) || quantity < 1) {
+            alert('유효한 쿠폰 코드, 할인율(1-100%), 그리고 수량(1 이상)을 입력해주세요.');
+            return;
+        }
+
+        try {
+            await addDoc(collection(db, 'coupons'), {
+                code: code,
+                discountPercentage: discountPercentage,
+                quantity: quantity,
+                createdAt: serverTimestamp()
+            });
+            alert('쿠폰이 성공적으로 추가되었습니다.');
+            couponCodeInput.value = '';
+            discountPercentageInput.value = '';
+            couponQuantityInput.value = '';
+        } catch (error) {
+            console.error('쿠폰 추가 중 오류 발생:', error);
+            alert('쿠폰 추가에 실패했습니다.');
+        }
+    });
+
+    // 쿠폰 삭제 이벤트 처리
+    couponListAdmin.addEventListener('click', async (e) => {
+        const target = e.target;
+        if (target.classList.contains('delete-coupon-btn')) {
+            const couponId = target.dataset.id;
+            if (confirm('정말로 이 쿠폰을 삭제하시겠습니까?')) {
+                try {
+                    await deleteDoc(doc(db, 'coupons', couponId));
+                    alert('쿠폰이 성공적으로 삭제되었습니다.');
+                } catch (error) {
+                    console.error('쿠폰 삭제 중 오류 발생:', error);
+                    alert('쿠폰 삭제에 실패했습니다.');
+                }
+            }
+        }
+    });
+
+    // 초기 쿠폰 목록 렌더링
+    renderCoupons();
+
     // --- 주문 관리 기능 ---
     const orderManagementSection = document.getElementById('order-management-section');
     const orderListContainer = document.getElementById('order-list');
 
-    // 주문 관리 섹션 보이기
-    orderManagementSection.style.display = 'block';
+
 
     // Firestore에서 주문 목록 불러오기 및 렌더링
     function renderOrders() {
@@ -318,4 +452,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 초기 주문 목록 렌더링
     renderOrders();
-});
+}

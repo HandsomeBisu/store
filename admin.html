@@ -37,7 +37,13 @@
         <div class="container">
             <h1>관리자 페이지</h1>
             
-            <section id="add-product-section">
+            <div id="admin-categories" style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem;">
+                <button class="btn admin-category-btn active" data-category="product-management">상품 관리</button>
+                <button class="btn admin-category-btn" data-category="coupon-management">쿠폰 관리</button>
+                <button class="btn admin-category-btn" data-category="order-management">주문 관리</button>
+            </div>
+
+            <section id="product-management-section" class="admin-section">
                 <h2>새 상품 추가</h2>
                 <form id="add-product-form" class="admin-form">
                     <div class="form-group">
@@ -72,9 +78,7 @@
                     <button type="submit" class="btn" id="submit-product">상품 추가하기</button>
                     <p id="upload-status"></p>
                 </form>
-            </section>
-
-            <section id="product-management-section">
+                
                 <h2>상품 관리</h2>
                 <table class="admin-table">
                     <thead>
@@ -90,7 +94,39 @@
                 </table>
             </section>
 
-            <section id="order-management-section" style="display: none;">
+            <section id="coupon-management-section" class="admin-section" style="display: none;">
+                <h2>쿠폰 관리</h2>
+                <form id="add-coupon-form" class="admin-form">
+                    <div class="form-group">
+                        <label for="coupon-code">쿠폰 코드</label>
+                        <input type="text" id="coupon-code" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="discount-percentage">할인율 (%)</label>
+                        <input type="number" id="discount-percentage" min="1" max="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="coupon-quantity">쿠폰 수량</label>
+                        <input type="number" id="coupon-quantity" min="1" required>
+                    </div>
+                    <button type="submit" class="btn">쿠폰 추가</button>
+                </form>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>쿠폰 코드</th>
+                            <th>할인율 (%)</th>
+                            <th>수량</th>
+                            <th>작업</th>
+                        </tr>
+                    </thead>
+                    <tbody id="coupon-list-admin">
+                        <!-- 쿠폰 목록이 여기에 동적으로 채워집니다. -->
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="order-management-section" class="admin-section" style="display: none;">
                 <h2>주문 관리</h2>
                 <div id="order-list">
                     <!-- 주문 목록이 여기에 표시됩니다. -->
@@ -100,7 +136,20 @@
     </main>
 
     <footer class="footer">
-        <p>&copy; 2025 DPS Team. All rights reserved.</p>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="policy.html?policy=terms-of-use">이용약관</a>
+                <a href="policy.html?policy=privacy">개인정보처리방침</a>
+                <a href="policy.html?policy=refund">환불 약관</a>
+                <a href="admin.html" id="admin-button">관리자</a>
+            </div>
+            <div class="company-info">
+                <p>&copy; 2025 DPS Team. All rights reserved.</p>
+                <p>회사명: DPS Store | 대표: 홍길동 | 주소: 서울특별시 강남구 테헤란로 123</p>
+                <p>사업자등록번호: 123-45-67890 | 통신판매업신고: 2023-서울강남-00000</p>
+                <p>고객센터: 070-1234-5678 | 이메일: support@dpsstore.com</p>
+            </div>
+        </div>
     </footer>
 
     <!-- Firebase Config -->
@@ -108,5 +157,6 @@
 
     <!-- Custom Scripts -->
     <script type="module" src="js/admin.js"></script>
+    <script type="module" src="js/common-auth-nav.js"></script>
 </body>
 </html>

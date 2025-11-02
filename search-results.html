@@ -3,30 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>마이페이지 - DPS Store</title>
+    <title>DPS Store</title>
     <meta property="og:image" content="assets/storelogo.png">
     <link rel="icon" href="assets/icon.png" type="image/png">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
-<body class="mypage-page">
-    <!-- Mobile MyPage Header -->
-    <div class="mobile-cart-header">
-        <a href="#" class="back-button"><span class="material-symbols-outlined">arrow_back_ios</span> 마이페이지</a>
+<body>
+    <!-- Mobile Header (Logo + Search) -->
+    <div class="mobile-header">
+        <a href="index.html" class="logo-mobile-header"><img src="assets/logo.png" alt="DPS Store Logo" class="logo-image"></a>
+        <div class="search-bar-mobile">
+            <div class="search-input-wrapper">
+                <input type="search" id="mobile-search-input" placeholder="DPS 후드/후드집업 출시" class="search-input">
+                <span class="material-symbols-outlined search-icon">search</span>
+            </div>
+        </div>
     </div>
 
     <header>
         <nav class="top-nav">
             <div class="nav-container">
                 <a href="index.html" class="logo"><img src="assets/logo.png" alt="DPS Store Logo" class="logo-image"></a>
-                <ul class="nav-links">
+                <button class="hamburger-menu" id="hamburger-menu">&#9776;</button>
+                <ul class="nav-links" id="nav-links">
                     <li><a href="index.html">홈</a></li>
                     <li><a href="http://pf.kakao.com/_eEFan">고객센터</a></li>
-                    <li><a href="mypage.html" class="active">마이페이지</a></li>
+                    <li><a href="mypage.html">마이페이지</a></li>
                 </ul>
                 <div class="nav-icons">
                     <div id="auth-container">
-                        <!-- 로그인 상태에 따라 버튼이 변경됩니다 -->
+                        <a href="login.html" id="login-btn" class="btn">로그인</a>
                     </div>
                     <a href="cart.html" class="cart-icon">
                         <span class="material-symbols-outlined">shopping_cart</span>
@@ -39,18 +46,24 @@
         </nav>
     </header>
 
-    <main>
+    <!-- PC Search Bar -->
+    <div class="search-bar-pc">
         <div class="container">
-            <h1>마이페이지</h1>
-            <div id="user-greeting" style="text-align: center; margin-bottom: 2rem; font-size: 1.5rem; font-weight: 600;"></div>
-            <div id="order-history-container">
-                <h2>주문 내역</h2>
-                <div id="order-list">
-                    <!-- 주문 내역이 여기에 동적으로 채워집니다. -->
-                    <p>주문 내역이 없습니다.</p>
-                </div>
+            <div class="search-input-wrapper">
+                <input type="search" id="pc-search-input" placeholder="상품 검색..." class="search-input">
+                <span class="material-symbols-outlined search-icon">search</span>
             </div>
         </div>
+    </div>
+
+    <main>
+        <section id="search-results-section" class="container">
+            <h2 id="search-query-display"></h2>
+            <div id="product-list" class="product-list">
+                <!-- Search results will be dynamically loaded here -->
+            </div>
+            <p id="no-results-message" style="display: none; text-align: center; margin-top: 2rem;">검색 결과가 없습니다.</p>
+        </section>
     </main>
 
     <footer class="footer">
@@ -67,16 +80,16 @@
                 <p>Support: DPS 카카오톡 채널</p>
             </div>
         </div>
-        </div>
     </footer>
 
     <!-- Firebase Config -->
     <script type="module" src="js/firebase.js"></script>
 
     <!-- Custom Scripts -->
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/mypage.js"></script>
+    <script type="module" src="js/products.js"></script>
+    <script type="module" src="js/main.js"></script>
     <script type="module" src="js/common-auth-nav.js"></script>
+    <script type="module" src="js/search.js"></script>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="bottom-nav-mobile">
@@ -88,7 +101,7 @@
             <span class="material-symbols-outlined">shopping_bag</span>
             <span class="nav-label">장바구니</span>
         </a>
-        <a href="mypage.html" class="nav-item active" id="bottom-nav-auth-link">
+        <a href="mypage.html" class="nav-item" id="bottom-nav-auth-link">
             <span class="material-symbols-outlined">person</span>
             <span class="nav-label">마이</span>
         </a>

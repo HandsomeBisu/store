@@ -1,5 +1,5 @@
 import { db, auth } from './firebase.js';
-import { collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { collection, doc, setDoc, serverTimestamp, query, where, getDocs, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
 document.addEventListener('DOMContentLoaded', () => {
     // --- 초기 데이터 ---
@@ -25,13 +25,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 금액
     const totalAmountEl = document.getElementById('totalAmount');
+    const summarySubtotalEl = document.getElementById('summarySubtotal');
+    const summaryDiscountEl = document.getElementById('summaryDiscount');
     const summaryTotalEl = document.getElementById('summaryTotal');
+
+    // 쿠폰 관련 DOM
+    const couponInput = document.getElementById('coupon-input');
+    const applyCouponBtn = document.getElementById('apply-coupon-btn');
+    const couponStatus = document.getElementById('coupon-status');
 
     // "바로 구매" 상품 확인
     const buyNowItem = JSON.parse(sessionStorage.getItem('buyNowItem'));
 
     let itemsToPay = [];
     let isBuyNow = false;
+    let discountAmount = 0;
 
     if (buyNowItem) {
         itemsToPay.push(buyNowItem);
@@ -41,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
         itemsToPay = JSON.parse(localStorage.getItem('cart')) || [];
     }
 
+    let subtotalAmount = 0;
     let totalPaymentAmount = 0;
     let currentSlideIndex = 0;
 
@@ -56,11 +65,13 @@ document.addEventListener('DOMContentLoaded', () => {
         productSliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
     }
 
-    function renderPaymentDetails() {
+    async function renderPaymentDetails() {
         if (itemsToPay.length === 0) {
             productSliderWrapper.innerHTML = '<p>주문할 상품이 없습니다.</p>';
             summaryItemsContainer.innerHTML = '<p>주문할 상품이 없습니다.</p>';
             totalAmountEl.textContent = formatNumber(0);
+            summarySubtotalEl.textContent = formatNumber(0);
+            summaryDiscountEl.textContent = formatNumber(0);
             summaryTotalEl.textContent = formatNumber(0);
             prevBtn.style.display = 'none';
             nextBtn.style.display = 'none';
@@ -85,16 +96,21 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `).join('');
 
-                totalPaymentAmount = itemsToPay.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-                const shippingFee = 3000;
-                totalPaymentAmount += shippingFee;
+        subtotalAmount = itemsToPay.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        const shippingFee = 3000;
+        totalPaymentAmount = subtotalAmount + shippingFee - discountAmount;
+        if (totalPaymentAmount < 0) totalPaymentAmount = 0; // Ensure total doesn't go negative
         
-                // 주문 요약 (우측)
-                let summaryHtml = itemsToPay.map(item => `
-                    <div class="summary-row"><span>${item.name} x ${item.quantity}</span><span>₩ ${formatNumber(item.price * item.quantity)}</span></div>
-                `).join('');
-                summaryHtml += `<div class="summary-row"><span>배송비</span><span>₩ ${formatNumber(shippingFee)}</span></div>`;
-                summaryItemsContainer.innerHTML = summaryHtml;        totalAmountEl.textContent = formatNumber(totalPaymentAmount);
+        // 주문 요약 (우측)
+        let summaryHtml = itemsToPay.map(item => `
+            <div class="summary-row"><span>${item.name} x ${item.quantity}</span><span>₩ ${formatNumber(item.price * item.quantity)}</span></div>
+        `).join('');
+        summaryHtml += `<div class="summary-row"><span>배송비</span><span>₩ ${formatNumber(shippingFee)}</span></div>`;
+        summaryItemsContainer.innerHTML = summaryHtml;
+
+        summarySubtotalEl.textContent = formatNumber(subtotalAmount);
+        summaryDiscountEl.textContent = formatNumber(discountAmount);
+        totalAmountEl.textContent = formatNumber(totalPaymentAmount);
         summaryTotalEl.textContent = formatNumber(totalPaymentAmount);
 
         if (itemsToPay.length > 1) {
@@ -149,6 +165,76 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     })
 
+    // 쿠폰 적용 로직
+    applyCouponBtn.addEventListener('click', async () => {
+        const code = couponInput.value.trim();
+        if (!code) {
+            couponStatus.textContent = '쿠폰 코드를 입력해주세요.';
+            couponStatus.style.color = '#e74c3c';
+            return;
+        }
+
+        const user = auth.currentUser;
+        if (!user) {
+            couponStatus.textContent = '로그인 후 쿠폰을 사용해주세요.';
+            couponStatus.style.color = '#e74c3c';
+            return;
+        }
+
+        try {
+            const q = query(collection(db, 'coupons'), where('code', '==', code));
+            const querySnapshot = await getDocs(q);
+
+            if (querySnapshot.empty) {
+                couponStatus.textContent = '유효하지 않은 쿠폰 코드입니다.';
+                couponStatus.style.color = '#e74c3c';
+                return;
+            }
+
+            const couponDoc = querySnapshot.docs[0];
+            const coupon = { id: couponDoc.id, ...couponDoc.data() };
+
+            if (coupon.quantity <= 0) {
+                couponStatus.textContent = '쿠폰이 모두 소진되었습니다.';
+                couponStatus.style.color = '#e74c3c';
+                return;
+            }
+
+            const couponUsageRef = doc(db, 'couponUsage', `${user.uid}_${coupon.id}`);
+            const couponUsageSnap = await getDoc(couponUsageRef);
+
+            if (couponUsageSnap.exists()) {
+                couponStatus.textContent = '이미 사용한 쿠폰입니다.';
+                couponStatus.style.color = '#e74c3c';
+                return;
+            }
+
+            const discountPercentage = coupon.discountPercentage;
+            discountAmount = subtotalAmount * (discountPercentage / 100);
+            
+            await updateDoc(doc(db, 'coupons', coupon.id), {
+                quantity: coupon.quantity - 1
+            });
+
+            await setDoc(couponUsageRef, {
+                userId: user.uid,
+                couponId: coupon.id,
+                usedAt: serverTimestamp()
+            });
+
+            couponStatus.textContent = `${discountPercentage}% 할인 적용! (₩ ${formatNumber(discountAmount)})`;
+            couponStatus.style.color = '#27ae60';
+            renderPaymentDetails(); // Recalculate and render totals
+
+        } catch (error) {
+            console.error('쿠폰 적용 중 오류 발생:', error);
+            couponStatus.textContent = '쿠폰 적용 중 오류가 발생했습니다.';
+            couponStatus.style.color = '#e74c3c';
+            discountAmount = 0;
+            renderPaymentDetails();
+        }
+    });
+
     // 카운트다운 (예: 24시간 유효 -> 여기선 12시간 예시)
     const EXPIRATION_MS = 1000 * 60 * 60 * 12; // 12시간
     const endTime = Date.now() + EXPIRATION_MS;
@@ -199,6 +285,8 @@ document.addEventListener('DOMContentLoaded', () => {
         phone: phone,
         memo: memo,
         items: itemsToPay,
+        subtotal: subtotalAmount,
+        discount: discountAmount,
         total: totalPaymentAmount,
         status: '입금확인', // 'pending', 'confirmed', 'shipped', 'delivered'
         createdAt: serverTimestamp(),

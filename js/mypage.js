@@ -24,7 +24,11 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(user => {
         currentUser = user;
         updateAuthUI(user);
+        const userGreeting = document.getElementById('user-greeting');
         if (user) {
+            if (userGreeting) {
+                userGreeting.textContent = `안녕하세요 ${user.displayName || '회원'}님`;
+            }
             loadUserOrders(user.uid);
         } else {
             window.location.href = 'login.html';
