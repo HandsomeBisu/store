@@ -6,11 +6,15 @@
     <title>Email Verification</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <h1>Verifying your email...</h1>
-        <p id="message"></p>
-    </div>
+<body data-theme="dark">
+    <main>
+        <div class="auth-container">
+            <a href="index.html" class="auth-logo"><img src="assets/logo.png" alt="DPS Store Logo" class="logo-image"></a>
+            <h1>이메일 확인 중...</h1>
+            <p id="message"></p>
+            <a href="login.html" class="btn" style="margin-top: 20px; display: none;" id="loginRedirectBtn">로그인 페이지로 이동</a>
+        </div>
+    </main>
     <script type="module" src="js/email-verification.js"></script>
 </body>
 </html>

@@ -613,6 +613,16 @@ main h1 {
         display: flex;
     }
 
+    /* Hide generic mobile header on mypage page */
+    body.mypage-page .mobile-header {
+        display: none;
+    }
+
+    /* Show mypage-specific mobile header on mypage page */
+    body.mypage-page .mobile-cart-header {
+        display: flex;
+    }
+
     .bottom-nav-mobile {
         display: flex; /* Show bottom nav on mobile */
     }
@@ -644,6 +654,20 @@ main h1 {
     .btn {
         padding: 0.6rem 1rem;
         font-size: 0.85rem;
+    }
+
+    .cart-summary .btn {
+        padding: 0.7rem 1.2rem;
+        font-size: 0.9rem;
+    }
+
+    .cart-summary {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .cart-summary .btn {
+        width: 100%;
     }
 
     /* Mobile Product List: 2 columns, square-like */
@@ -738,60 +762,41 @@ main h1 {
         padding-top: 1.5rem;
     }
 
-    /* Cart Page Mobile Adjustments */
+    .payment-container {
+        flex-direction: column;
+    }
+
     .cart-page-container .cart-item {
-        grid-template-columns: 70px 1fr auto; /* Further adjust grid for smaller screens */
-        gap: 0.8rem;
-        font-size: 0.85rem;
+        grid-template-columns: 80px 1fr;
+        grid-template-rows: auto auto auto;
+        grid-template-areas:
+            "image info"
+            "image quantity"
+            "image remove";
+        gap: 0.5rem 1rem;
         padding: 1rem 0;
     }
 
-    .cart-item-image {
-        width: 50px;
-        height: 50px;
+    .cart-page-container .cart-item-image {
+        grid-area: image;
+        width: 80px;
+        height: 80px;
     }
 
-    .cart-item-quantity {
-        gap: 0.4rem;
+    .cart-page-container .cart-item-info {
+        grid-area: info;
     }
 
-    .quantity-btn {
-        width: 22px;
-        height: 22px;
+    .cart-page-container .cart-item-quantity {
+        grid-area: quantity;
+        justify-self: start;
     }
 
-    .cart-summary .cart-total {
-        font-size: 1.1rem;
-    }
-
-    .cart-summary .btn {
-        padding: 0.7rem 1.2rem;
-        font-size: 0.9rem;
-    }
-
-    /* Admin Page Mobile Adjustments */
-    .admin-form .form-group label {
-        font-size: 0.85rem;
-    }
-
-    .admin-form input[type="text"],
-    .admin-form input[type="number"],
-    .admin-form textarea,
-    .admin-form select {
-        padding: 0.5rem;
-        font-size: 0.85rem;
-    }
-
-    .admin-table th,
-    .admin-table td {
-        padding: 0.5rem 0.3rem;
-        font-size: 0.8rem;
-    }
-
-    .admin-table .btn-secondary,
-    .admin-table .btn-danger {
-        padding: 0.3rem 0.5rem;
-        font-size: 0.75rem;
+    .cart-page-container .remove-from-cart-btn {
+        grid-area: remove;
+        justify-self: start;
+        padding: 0;
+        font-size: 1.2rem;
     }
 }
 
@@ -982,48 +987,377 @@ main h1 {
     flex: 1;
 }
 
+/* My Page - Order History */
+#order-history-container h2 {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+#order-list .order-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 1.5rem 2rem;
+    margin-bottom: 1.5rem;
+}
+
+#order-list .order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+#order-list .order-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+#order-list .order-body ul {
+    list-style-type: none;
+    padding-left: 0;
+    margin-top: 1rem;
+}
+
+#order-list .order-body li {
+    margin-bottom: 0.5rem;
+}
+
+
+/* admin.html - Order Management Styles */
+.order-card {
+    background-color: #f9f9f9;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 1rem;
+}
+
+.order-body ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+.order-actions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.order-actions select {
+    padding: 0.5rem;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+}
+
+.update-status-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.update-status-btn:hover {
+    background-color: var(--accent-color-hover);
+}
+
+/* Admin Page: Size and Price Input Layout */
+.size-option {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.size-option input {
+    flex: 1;
+}
+
+.size-option .remove-option-btn {
+    flex-shrink: 0;
+    background: #eee;
+    border: 1px solid #ccc;
+    color: #333;
+    padding: 4px 8px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+/* Product Detail Page Warning Message */
+.warning-message {
+    background-color: #ffebee; /* Light red background */
+    color: #c62828; /* Darker red text */
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ef9a9a;
+}
+
+/* Auth Pages (Login/Signup) */
+main .auth-container {
+    max-width: 550px; /* Adjusted width */
+    margin: 4rem auto;
+    padding: 2rem;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+main .auth-container h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: var(--primary-text-color);
+}
+
+.auth-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem; /* Add some gap between form groups */
+}
+
+.auth-form .form-group {
+    flex: 1 1 100%; /* Make form groups take full width by default */
+    margin-bottom: 0; /* Remove default margin-bottom as gap handles spacing */
+    text-align: left;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--secondary-text-color);
+}
+
+.auth-form input[type="email"],
+.auth-form input[type="password"] {
+    width: 100%;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: var(--background-color);
+    color: var(--primary-text-color);
+}
+
+.auth-form input[type="email"]:focus,
+.auth-form input[type="password"]:focus {
+    outline: none;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 2px rgba(var(--accent-color-rgb), 0.2);
+}
+
+.auth-form .btn {
+    margin-top: 1.5rem;
+    width: 100%;
+    padding: 0.9rem 1.5rem;
+    font-size: 1rem;
+}
+
+.auth-links {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+}
+
+.auth-links a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 2rem 0;
+    color: var(--secondary-text-color);
+}
+
+.divider::before,
+.divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.divider:not(:empty)::before {
+    margin-right: .5em;
+}
+
+.divider:not(:empty)::after {
+    margin-left: .5em;
+}
+
+.btn-google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #ffffff;
+    color: #000000;
+    border: 1px solid var(--border-color);
+    padding: 0.8rem 1.5rem;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+}
+
+.btn-google:hover {
+    background-color: var(--surface-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-google img {
+    width: 20px;
+    height: 20px;
+    margin-right: 0.75rem;
+}
+
+.error-message {
+    background-color: #ffebee; /* Light red background */
+    color: #c62828; /* Darker red text */
+    padding: 12px 15px;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 14px;
+    line-height: 1.5;
+    border: 1px solid #ef9a9a;
+    text-align: left;
+}
+
+.error-message.hidden {
+    display: none;
+}
+
+.error-message.active {
+    display: block;
+}
+
+.hint {
+    font-size: 0.85rem;
+    color: var(--secondary-text-color);
+    margin-top: 0.5rem;
+    text-align: left;
+}
 
 @media screen and (max-width: 768px) {
-    .product-main-section {
-        flex-direction: column;
-    }
-    .product-detail-image {
-        max-width: 100%;
+    main .auth-container {
+        margin: 1rem auto;
+        padding: 1.5rem;
+        box-shadow: none;
+        border-radius: 0;
     }
 
-    /* Mobile Product Detail Page Adjustments */
-    .product-title {
+    main .auth-container h1 {
         font-size: 1.8rem;
+        margin-bottom: 1.5rem;
     }
 
-    .product-detail-info .product-price {
-        font-size: 1.4rem;
-    }
-
-    .option-group label {
-        font-size: 0.9rem;
-    }
-
-    .select-wrapper select {
-        padding: 0.6rem 0.8rem;
-        font-size: 0.9rem;
-    }
-
-    .product-actions-group {
-        max-width: 100%; /* Allow buttons to take full width */
-    }
-
-    .product-actions-group .btn {
-        padding: 0.8rem;
+    .auth-form .btn,
+    .btn-google {
+        padding: 0.8rem 1rem;
         font-size: 0.95rem;
     }
 
-    .product-full-description {
-        font-size: 0.9rem;
-        padding-top: 1.5rem;
+    .divider {
+        margin: 1.5rem 0;
+    }
+}
+
+/* Auth Page Body Styling */
+.auth-page-body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--background-color);
+}
+
+.auth-page-body.dark-mode {
+    --background-color: #1a1a1a;
+    --surface-color: #2c2c2c;
+    --primary-text-color: #ffffff;
+    --secondary-text-color: #bbbbbb;
+    --border-color: #444444;
+    --accent-color: #4a90e2;
+    --accent-color-hover: #6aafff;
+}
+
+.auth-page-body main {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.auth-logo {
+    display: block;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+    .auth-logo .logo-image {
+        height: 60px;
+        width: auto;
     }
 
-    .payment-container {
-        flex-direction: column;
+    .dark-mode-toggle-btn {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: var(--secondary-text-color);
+        cursor: pointer;
+        font-size: 1.5rem;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
+
+    .dark-mode-toggle-btn:hover {
+        background-color: rgba(0, 0, 0, 0.1);
+        color: var(--primary-text-color);
+    }
+
+    .auth-page-body.dark-mode .dark-mode-toggle-btn:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--primary-text-color);
+    }
+/* Auth Container Width Adjustment */
+main .auth-container {
+    max-width: 500px;
+    width: 95%;
+    margin: 4rem auto;
+    padding: 2rem;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    text-align: center;
 }

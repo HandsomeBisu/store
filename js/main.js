@@ -1,3 +1,7 @@
+import { auth, db } from './firebase.js';
+import { collection, query, orderBy, onSnapshot, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
 document.addEventListener('DOMContentLoaded', () => {
     const productList = document.getElementById('product-list');
     const authContainer = document.getElementById('auth-container');
@@ -32,11 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             });
         } else {
-            authContainer.innerHTML = `<button id="login-btn" class="btn">Google 로그인</button>`;
-            document.getElementById('login-btn').addEventListener('click', () => {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(provider).catch(error => console.error('로그인 에러:', error));
-            });
+            authContainer.innerHTML = `<a href="login.html" id="login-btn" class="btn">로그인</a>`;
         }
     }
 
@@ -47,7 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!productList) return;
         productList.innerHTML = '<p>상품을 불러오는 중...</p>';
         
-        db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, snapshot => {
             productSlidersIntervals.forEach(clearInterval);
             productSlidersIntervals = [];
 
@@ -72,12 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="product-actions">
                             <button class="btn add-to-cart-btn" data-id="${product.id}">장바구니 추가</button>
-                            <button class="btn buy-now-btn" data-id="${product.id}">바로 구매</button>
                         </div>
                     </div>
                     <div class="product-info">
                         <h3 class="product-name">${product.name}</h3>
-                        <p class="product-price">₩${product.price.toLocaleString()}</p>
+                        <p class="product-price">₩${(product.price || (product.sizes && product.sizes[0] ? product.sizes[0].price : 0)).toLocaleString()}</p>
                     </div>
                 `;
                 productList.appendChild(productCard);
@@ -143,31 +143,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         });
-
-        document.querySelectorAll('.buy-now-btn').forEach(button => {
-            button.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (currentUser) {
-                    const productId = e.target.dataset.id;
-                    buyNowById(productId);
-                } else {
-                    alert('로그인이 필요합니다.');
-                }
-            });
-        });
     }
 
     async function addProductToCartById(productId) {
-        const productRef = db.collection('products').doc(productId);
-        const doc = await productRef.get();
-        if (doc.exists) {
-            const product = { id: doc.id, ...doc.data() };
+        const productRef = doc(db, 'products', productId);
+        const docSnap = await getDoc(productRef);
+        if (docSnap.exists()) {
+            const product = { id: docSnap.id, ...docSnap.data() };
             // 기본 옵션 (첫 번째 색상, 첫 번째 사이즈)으로 추가
             const defaultColor = product.colors[0];
             const defaultSize = product.sizes[0];
 
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            const itemIndex = cart.findIndex(item => item.id === productId && item.color === defaultColor.name && item.size === defaultSize);
+            const itemIndex = cart.findIndex(item => item.id === productId && item.color === defaultColor.name && item.size === defaultSize.name);
 
             if (itemIndex > -1) {
                 cart[itemIndex].quantity++;
@@ -175,9 +163,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 cart.push({
                     id: product.id,
                     name: product.name,
-                    price: product.price,
+                    price: defaultSize.price, // 사이즈별 가격 적용
                     color: defaultColor.name,
-                    size: defaultSize,
+                    size: defaultSize.name,
                     image: defaultColor.image,
                     quantity: 1
                 });
@@ -187,29 +175,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function buyNowById(productId) {
-        const productRef = db.collection('products').doc(productId);
-        const doc = await productRef.get();
-        if (doc.exists) {
-            const product = { id: doc.id, ...doc.data() };
-            const defaultColor = product.colors[0];
-            const defaultSize = product.sizes[0];
 
-            const buyNowItem = {
-                id: product.id,
-                name: product.name,
-                price: product.price,
-                color: defaultColor.name,
-                size: defaultSize,
-                image: defaultColor.image,
-                quantity: 1
-            };
-            
-            sessionStorage.setItem('buyNowItem', JSON.stringify(buyNowItem));
-            window.location.href = 'payment.html';
-        }
-    }
-
-    // 초기화
     renderProducts();
 });

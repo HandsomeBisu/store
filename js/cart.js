@@ -1,3 +1,6 @@
+import { auth } from './firebase.js';
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+
 document.addEventListener('DOMContentLoaded', () => {
     const cartContainer = document.getElementById('cart-container');
     const cartTotalPrice = document.getElementById('cart-total-price');
@@ -11,7 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
     auth.onAuthStateChanged(user => {
         currentUser = user;
         updateAuthUI(user);
-        loadCartItems();
+        if (user) {
+            loadCartItems();
+        } else {
+            window.location.href = 'login.html';
+        }
     });
 
     // 로그인/로그아웃 UI 업데이트
@@ -22,11 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 auth.signOut();
             });
         } else {
-            authContainer.innerHTML = `<button id="login-btn" class="btn">Google 로그인</button>`;
-            document.getElementById('login-btn').addEventListener('click', () => {
-                const provider = new firebase.auth.GoogleAuthProvider();
-                auth.signInWithPopup(provider);
-            });
+            authContainer.innerHTML = `<a href="login.html" id="login-btn" class="btn">로그인</a>`;
         }
     }
 

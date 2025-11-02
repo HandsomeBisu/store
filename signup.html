@@ -1,42 +1,55 @@
-
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>회원가입 - DPS Store</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <meta property="og:image" content="assets/logo.png">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-blue-50 min-h-screen flex items-center justify-center">
+<body data-theme="dark">
+    <main>
+        <div class="auth-container">
+            <a href="index.html" class="auth-logo"><img src="assets/logo2.png" alt="DPS Store Logo" class="logo-image"></a>
+            <h1>회원가입</h1>
+            
+            <div id="authError" class="error-message hidden"></div>
 
-    <div class="bg-white rounded-2xl max-w-md w-full p-8 shadow-lg">
-        <a href="index.html" class="text-2xl font-bold text-sky-600 mb-6 block text-center">DPS Store</a>
-        <h3 class="text-2xl font-bold text-gray-800 text-center mb-6">회원가입</h3>
-        
-        <div id="authError" class="bg-red-100 text-red-700 p-3 rounded-lg mb-4 hidden"></div>
+            <form id="authForm" class="auth-form">
+                <div class="form-group">
+                    <label for="displayName">이름</label>
+                    <input type="text" id="displayName" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">이메일</label>
+                    <input type="email" id="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">비밀번호</label>
+                    <input type="password" id="password" minlength="6" required>
+                    <p class="hint">비밀번호는 6자 이상이어야 합니다.</p>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">비밀번호 확인</label>
+                    <input type="password" id="confirmPassword" minlength="6" required>
+                </div>
+                <button type="submit" class="btn">회원가입</button>
+            </form>
 
-        <form id="authForm">
-            <div class="mb-4">
-                <label for="email" class="block text-gray-700 mb-2">이메일</label>
-                <input type="email" id="email" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" required>
+            <div class="auth-links">
+                <a href="login.html">이미 계정이 있으신가요? 로그인</a>
             </div>
-            <div class="mb-6">
-                <label for="password" class="block text-gray-700 mb-2">비밀번호</label>
-                <input type="password" id="password" class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500" minlength="6" required>
-                <p class="text-xs text-gray-500 mt-1">비밀번호는 6자 이상이어야 합니다.</p>
-            </div>
-            <button type="submit" class="w-full bg-gradient-to-r from-sky-500 to-blue-500 text-white py-3 rounded-lg font-bold text-lg hover:from-sky-600 hover:to-blue-600 transition-colors">
-                회원가입
-            </button>
-        </form>
 
-        <div class="text-center my-4">
-            <a href="login.html" class="text-sky-600 hover:underline">이미 계정이 있으신가요? 로그인</a>
+
         </div>
+    </main>
 
-    </div>
-
+    <!-- Firebase Config -->
     <script type="module" src="js/firebase.js"></script>
+
+    <!-- Custom Scripts -->
     <script type="module" src="js/auth.js"></script>
     <script type="module">
         import { signUpWithEmail } from './js/auth.js';
@@ -46,16 +59,26 @@
 
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            const displayName = document.getElementById('displayName').value;
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const result = await signUpWithEmail(email, password);
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                authError.textContent = "비밀번호가 일치하지 않습니다.";
+                authError.classList.remove('hidden');
+                authError.classList.add('active');
+                return;
+            }
+
+            const result = await signUpWithEmail(email, password, displayName);
 
             if (result.error) {
                 authError.textContent = "회원가입 중 오류가 발생했습니다. 이메일 형식을 확인하거나 다른 이메일을 사용하세요.";
                 authError.classList.remove('hidden');
+                authError.classList.add('active');
             } else {
-                alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
-                window.location.href = 'login.html';
+                window.location.href = 'email-verification-needed.html';
             }
         });
     </script>

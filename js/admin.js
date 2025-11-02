@@ -1,3 +1,6 @@
+import { db } from './firebase.js';
+import { collection, query, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
 document.addEventListener('DOMContentLoaded', () => {
     const addProductForm = document.getElementById('add-product-form');
     const submitButton = document.getElementById('submit-product');
@@ -29,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         newSizeOption.classList.add('size-option');
         newSizeOption.innerHTML = `
             <input type="text" placeholder="사이즈" class="product-size" required>
+            <input type="number" placeholder="가격" class="product-size-price" required>
             <button type="button" class="remove-option-btn">삭제</button>
         `;
         sizeOptionsContainer.appendChild(newSizeOption);
@@ -46,13 +50,18 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const productName = document.getElementById('product-name').value;
-        const productPrice = parseFloat(document.getElementById('product-price').value);
         const productDescription = document.getElementById('product-description').value;
         const colorOptions = colorOptionsContainer.querySelectorAll('.color-option');
         const sizeOptions = sizeOptionsContainer.querySelectorAll('.size-option');
 
-        if (!productName || !productPrice || colorOptions.length === 0 || sizeOptions.length === 0) {
-            alert('상품명, 가격, 색상, 사이즈는 필수 항목입니다.');
+        const sizes = Array.from(sizeOptions).map(opt => {
+            const name = opt.querySelector('.product-size').value;
+            const price = parseFloat(opt.querySelector('.product-size-price').value);
+            return { name, price };
+        }).filter(s => s.name && !isNaN(s.price));
+
+        if (!productName || sizes.length === 0 || colorOptions.length === 0) {
+            alert('상품명, 색상, 사이즈 및 가격은 필수 항목입니다.');
             return;
         }
 
@@ -90,16 +99,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
 
-            const sizes = Array.from(sizeOptions).map(opt => opt.querySelector('.product-size').value).filter(Boolean);
             if (sizes.length === 0) {
-                alert('하나 이상의 사이즈를 입력해주세요.');
+                alert('하나 이상의 사이즈와 가격을 입력해주세요.');
                 uploadStatus.textContent = '';
                 return;
             }
 
             const productData = {
                 name: productName,
-                price: productPrice,
+                price: sizes[0].price, // 대표 가격으로 첫 번째 사이즈의 가격을 사용
                 description: productDescription,
                 colors: colors,
                 sizes: sizes,
@@ -107,12 +115,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (editMode) {
                 // 수정 모드
-                await db.collection('products').doc(currentProductId).update(productData);
+                const productRef = doc(db, 'products', currentProductId);
+                await updateDoc(productRef, productData);
                 uploadStatus.textContent = '상품이 성공적으로 수정되었습니다!';
             } else {
                 // 추가 모드
-                productData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-                await db.collection('products').add(productData);
+                productData.createdAt = serverTimestamp();
+                await addDoc(collection(db, 'products'), productData);
                 uploadStatus.textContent = '상품이 성공적으로 추가되었습니다!';
             }
 
@@ -141,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sizeOptionsContainer.innerHTML = `
             <div class="size-option">
                 <input type="text" placeholder="사이즈 (예: S)" class="product-size" required>
+                <input type="number" placeholder="가격" class="product-size-price" required>
             </div>`;
     }
 
@@ -149,7 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 관리자 페이지 상품 목록 렌더링
     function renderAdminProducts() {
-        db.collection('products').orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+        const q = query(collection(db, 'products'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, snapshot => {
             productListAdmin.innerHTML = '';
             if (snapshot.empty) {
                 productListAdmin.innerHTML = '<tr><td colspan="3">등록된 상품이 없습니다.</td></tr>';
@@ -183,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // 삭제 처리
             if (confirm('정말로 이 상품을 삭제하시겠습니까?')) {
                 try {
-                    await db.collection('products').doc(productId).delete();
+                    await deleteDoc(doc(db, 'products', productId));
                 } catch (error) {
                     console.error('상품 삭제 중 오류 발생:', error);
                     alert('상품 삭제에 실패했습니다.');
@@ -191,13 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } else if (target.classList.contains('edit-product-btn')) {
             // 수정 처리
-            const doc = await db.collection('products').doc(productId).get();
-            if (!doc.exists) return;
+            const productRef = doc(db, 'products', productId);
+            const docSnap = await getDoc(productRef);
+            if (!docSnap.exists()) return;
 
-            const product = doc.data();
+            const product = docSnap.data();
             
             document.getElementById('product-name').value = product.name;
-            document.getElementById('product-price').value = product.price;
             document.getElementById('product-description').value = product.description;
 
             colorOptionsContainer.innerHTML = product.colors.map(color => `
@@ -211,7 +222,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             sizeOptionsContainer.innerHTML = product.sizes.map(size => `
                 <div class="size-option">
-                    <input type="text" placeholder="사이즈" class="product-size" value="${size}" required>
+                    <input type="text" placeholder="사이즈" class="product-size" value="${size.name}" required>
+                    <input type="number" placeholder="가격" class="product-size-price" value="${size.price}" required>
                     <button type="button" class="remove-option-btn">삭제</button>
                 </div>
             `).join('');
@@ -225,4 +237,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 초기 상품 목록 렌더링
     renderAdminProducts();
+
+    // --- 주문 관리 기능 ---
+    const orderManagementSection = document.getElementById('order-management-section');
+    const orderListContainer = document.getElementById('order-list');
+
+    // 주문 관리 섹션 보이기
+    orderManagementSection.style.display = 'block';
+
+    // Firestore에서 주문 목록 불러오기 및 렌더링
+    function renderOrders() {
+        const q = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+        onSnapshot(q, snapshot => {
+            orderListContainer.innerHTML = '';
+            if (snapshot.empty) {
+                orderListContainer.innerHTML = '<p>새로운 주문이 없습니다.</p>';
+                return;
+            }
+            snapshot.forEach(doc => {
+                const order = { id: doc.id, ...doc.data() };
+                const orderCard = document.createElement('div');
+                orderCard.classList.add('order-card'); // CSS 스타일링을 위한 클래스
+
+                const itemsHtml = order.items.map(item => `
+                    <li>${item.name} (사이즈: ${item.size}, 색상: ${item.color}) x ${item.quantity}</li>
+                `).join('');
+
+                const createdAt = order.createdAt ? order.createdAt.toDate().toLocaleString('ko-KR') : '날짜 정보 없음';
+
+                orderCard.innerHTML = `
+                    <div class="order-header">
+                        <strong>주문번호: ${order.id}</strong>
+                        <span>주문일시: ${createdAt}</span>
+                    </div>
+                    <div class="order-body">
+                        <p><strong>입금자:</strong> ${order.payer} | <strong>연락처:</strong> ${order.phone}</p>
+                        <p><strong>메모:</strong> ${order.memo || '-'}</p>
+                        <p><strong>주문 상품:</strong></p>
+                        <ul>${itemsHtml}</ul>
+                        <p><strong>총 결제금액:</strong> ₩${(order.total || 0).toLocaleString()}</p>
+                    </div>
+                    <div class="order-actions">
+                        <label for="status-select-${order.id}">주문 상태:</label>
+                        <select id="status-select-${order.id}" data-id="${order.id}">
+                            <option value="주문대기" ${order.status === '주문대기' ? 'selected' : ''}>주문대기</option>
+                            <option value="주문완료" ${order.status === '입금확인' || order.status === '주문완료' ? 'selected' : ''}>주문완료</option>
+                            <option value="배송중" ${order.status === '배송중' ? 'selected' : ''}>배송중</option>
+                            <option value="배달완료" ${order.status === '배달완료' ? 'selected' : ''}>배달완료</option>
+                        </select>
+                        <button class="btn-secondary update-status-btn" data-id="${order.id}">상태 저장</button>
+                    </div>
+                `;
+                orderListContainer.appendChild(orderCard);
+            });
+        }, error => {
+            console.error("주문 로딩 중 에러 발생: ", error);
+            orderListContainer.innerHTML = '<p>주문을 불러오는 데 실패했습니다.</p>';
+        });
+    }
+
+    // 주문 상태 업데이트 이벤트 처리
+    orderListContainer.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('update-status-btn')) {
+            const orderId = e.target.dataset.id;
+            const statusSelect = document.getElementById(`status-select-${orderId}`);
+            const newStatus = statusSelect.value;
+
+            if (confirm(`주문(${orderId})의 상태를 '${statusSelect.options[statusSelect.selectedIndex].text}'(으)로 변경하시겠습니까?`)) {
+                try {
+                    const orderRef = doc(db, 'orders', orderId);
+                    await updateDoc(orderRef, { status: newStatus });
+                    alert('주문 상태가 성공적으로 업데이트되었습니다.');
+                } catch (error) {
+                    console.error('주문 상태 업데이트 중 오류 발생:', error);
+                    alert('주문 상태 업데이트에 실패했습니다.');
+                }
+            }
+        }
+    });
+
+    // 초기 주문 목록 렌더링
+    renderOrders();
 });

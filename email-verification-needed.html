@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이메일 확인 필요 - DPS Store</title>
+    <meta property="og:image" content="assets/logo.png">
+    <link rel="icon" href="assets/logo.png" type="image/png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body data-theme="dark">
+    <main>
+        <div class="auth-container">
+            <a href="index.html" class="auth-logo"><img src="assets/logo.png" alt="DPS Store Logo" class="logo-image"></a>
+            <h1>이메일 확인 필요</h1>
+            <p>회원가입을 완료하려면 이메일로 전송된 확인 링크를 클릭해주세요.</p>
+            <p>이메일을 받지 못하셨다면 스팸함을 확인하거나, <a href="#" id="resendEmail">여기</a>를 클릭하여 다시 보내주세요.</p>
+            <div id="message" class="error-message hidden"></div>
+            <a href="login.html" class="btn" style="margin-top: 20px;">로그인 페이지로 이동</a>
+        </div>
+    </main>
+
+    <!-- Firebase Config -->
+    <script type="module" src="js/firebase.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module">
+        import { auth } from './js/firebase.js';
+        import { sendEmailVerification } from './js/auth.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const resendEmailLink = document.getElementById('resendEmail');
+            const messageDiv = document.getElementById('message');
+
+            resendEmailLink.addEventListener('click', async (e) => {
+                e.preventDefault();
+                const user = auth.currentUser;
+                if (user) {
+                    const result = await sendEmailVerification(user);
+                    if (result.success) {
+                        messageDiv.textContent = '확인 이메일을 다시 보냈습니다. 스팸함을 확인해주세요.';
+                        messageDiv.classList.remove('hidden');
+                        messageDiv.classList.add('active');
+                        messageDiv.style.backgroundColor = '#d4edda'; // Green for success
+                        messageDiv.style.color = '#155724';
+                    } else {
+                        messageDiv.textContent = `이메일 재전송에 실패했습니다: ${result.error}`; 
+                        messageDiv.classList.remove('hidden');
+                        messageDiv.classList.add('active');
+                        messageDiv.style.backgroundColor = '#ffebee'; // Red for error
+                        messageDiv.style.color = '#c62828';
+                    }
+                } else {
+                    messageDiv.textContent = '로그인 상태가 아닙니다. 로그인 후 다시 시도해주세요.';
+                    messageDiv.classList.remove('hidden');
+                    messageDiv.classList.add('active');
+                    messageDiv.style.backgroundColor = '#ffebee'; // Red for error
+                    messageDiv.style.color = '#c62828';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

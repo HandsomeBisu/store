@@ -1,3 +1,6 @@
+import { db, auth } from './firebase.js';
+import { collection, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- 초기 데이터 ---
     const DEFAULT_ACCOUNT = { bank: '국민은행', number: '6336-9074-6980-34', holder: '조승우' };
@@ -186,23 +189,37 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // 시뮬레이션: 서버에 전송된다고 가정
-      iPaidBtn.textContent = '확인중...';
+      iPaidBtn.textContent = '처리 중...';
       iPaidBtn.disabled = true;
 
-      setTimeout(()=>{
-        // 성공 모달 대신 간단한 alert + 요약
-        const summary = `입금 접수되었습니다.\n입금자: ${payer}\n연락처: ${phone}\n입금계좌: ${currentAccount.bank} ${currentAccount.number}\n금액: ₩${formatNumber(totalPaymentAmount)}\n메모: ${memo || '-'}`;
-        alert(summary + '\n\n관리자 확인 후 주문이 확정됩니다.');
-        iPaidBtn.textContent = '입금 완료 등록';
-        iPaidBtn.disabled = false;
+      // Firestore에 주문 데이터 저장
+      const orderRef = doc(collection(db, 'orders'), `DPS-${Date.now().toString()}`);
+      const orderData = {
+        payer: payer,
+        phone: phone,
+        memo: memo,
+        items: itemsToPay,
+        total: totalPaymentAmount,
+        status: '입금확인', // 'pending', 'confirmed', 'shipped', 'delivered'
+        createdAt: serverTimestamp(),
+        userId: auth.currentUser ? auth.currentUser.uid : null // 현재 로그인한 사용자 ID 추가
+      };
 
-        // 바로 구매가 아닌 경우에만 장바구니 비우기
-        if (!isBuyNow) {
-            localStorage.removeItem('cart');
-        }
-        window.location.href = 'index.html';
-
-      }, 1200);
+      setDoc(orderRef, orderData)
+        .then(() => {
+          console.log('Order successfully written!');
+          // 바로 구매가 아닌 경우에만 장바구니 비우기
+          if (!isBuyNow) {
+              localStorage.removeItem('cart');
+          }
+          window.location.href = 'order-confirmation.html';
+        })
+        .catch((error) => {
+          console.error('Error writing order: ', error);
+          alert('주문 처리 중 오류가 발생했습니다. 다시 시도해주세요.');
+          iPaidBtn.textContent = '결제 완료';
+          iPaidBtn.disabled = false;
+        });
     });
 
     // 주문 취소

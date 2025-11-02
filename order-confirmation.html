@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>주문 완료 - DPS Store</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --accent: #2b6ef6;
+      --accent-2: #111827;
+      --success: #08a05b;
+      --shadow: 0 6px 18px rgba(17,24,39,0.08);
+      --radius: 14px;
+    }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans KR', 'Apple SD Gothic Neo', sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--accent-2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .confirmation-box {
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 40px;
+      max-width: 400px;
+      width: 100%;
+    }
+    .icon {
+      font-size: 48px;
+      color: var(--success);
+    }
+    h1 {
+      font-size: 22px;
+      margin-top: 16px;
+      margin-bottom: 8px;
+    }
+    p {
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+    .btn {
+      margin-top: 24px;
+      border: 0;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+      text-decoration: none;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+  <div class="confirmation-box">
+    <span class="material-symbols-outlined icon">
+      check_circle
+    </span>
+    <h1>주문 접수가 완료되었습니다</h1>
+    <p>입금자명과 주문자명이 일치하는지 확인 후, 2-3시간 내로 주문이 확정됩니다. 주문 상태는 '마이페이지'에서 확인하실 수 있습니다.</p>
+    <a href="index.html" class="btn">홈으로 돌아가기</a>
+  </div>
+</body>
+</html>

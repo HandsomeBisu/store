@@ -23,10 +23,17 @@
                 <ul class="nav-links">
                     <li><a href="index.html">홈</a></li>
                     <li><a href="http://pf.kakao.com/_eEFan">고객센터</a></li>
+                    <li><a href="mypage.html">마이페이지</a></li>
                 </ul>
                 <div class="nav-icons">
+                    <div id="auth-container">
+                        <a href="login.html" id="login-btn" class="btn">로그인</a>
+                    </div>
                     <a href="cart.html" class="cart-icon">
                         <span class="material-symbols-outlined">shopping_cart</span>
+                    </a>
+                    <a href="mypage.html" class="mypage-icon">
+                        <span class="material-symbols-outlined">person</span>
                     </a>
                 </div>
             </div>
@@ -52,19 +59,15 @@
         <p>&copy; 2025 DPS Team. All rights reserved. | <a href="admin.html">Admin</a></p>
     </footer>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
     <!-- Firebase Config -->
-    <script src="js/firebase-config.js"></script>
+    <script type="module" src="js/firebase.js"></script>
 
     <!-- Marked.js for Markdown parsing -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
     <!-- Custom Scripts -->
-    <script src="js/product-detail.js"></script>
+    <script type="module" src="js/product-detail.js"></script>
+    <script type="module" src="js/common-auth-nav.js"></script>
 
     <!-- Mobile Bottom Navigation -->
     <nav class="bottom-nav-mobile">
@@ -76,7 +79,7 @@
             <span class="material-symbols-outlined">shopping_bag</span>
             <span class="nav-label">장바구니</span>
         </a>
-        <a href="#" class="nav-item">
+        <a href="mypage.html" class="nav-item" id="bottom-nav-auth-link">
             <span class="material-symbols-outlined">person</span>
             <span class="nav-label">마이</span>
         </a>
