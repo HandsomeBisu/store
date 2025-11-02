@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div style="display:flex;gap:12px;align-items:end;justify-content:space-between">
                         <div>
                             <div class="price">₩ ${formatNumber(item.price * item.quantity)}</div>
-                            <div class="muted-small">예상 발송 2-3일</div>
+                            <div class="muted-small">예상 발송 7-14일</div>
                         </div>
                         <div style="text-align:right;color:var(--muted);font-size:13px">주문번호 <br><strong>#DPS-${Date.now().toString().slice(-7)}</strong></div>
                     </div>
