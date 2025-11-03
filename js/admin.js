@@ -166,11 +166,18 @@ function initializeAdminPage() {
             if (editMode) {
                 // 수정 모드
                 const productRef = doc(db, 'products', currentProductId);
+                const docSnap = await getDoc(productRef);
+                if (docSnap.exists()) {
+                    const existingProduct = docSnap.data();
+                    productData.shippingFeeExempt = existingProduct.shippingFeeExempt || false;
+                }
+
                 await updateDoc(productRef, productData);
                 uploadStatus.textContent = '상품이 성공적으로 수정되었습니다!';
             } else {
                 // 추가 모드
                 productData.createdAt = serverTimestamp();
+                productData.shippingFeeExempt = false; // 기본값으로 false 설정
                 await addDoc(collection(db, 'products'), productData);
                 uploadStatus.textContent = '상품이 성공적으로 추가되었습니다!';
             }
@@ -213,7 +220,7 @@ function initializeAdminPage() {
         onSnapshot(q, snapshot => {
             productListAdmin.innerHTML = '';
             if (snapshot.empty) {
-                productListAdmin.innerHTML = '<tr><td colspan="3">등록된 상품이 없습니다.</td></tr>';
+                productListAdmin.innerHTML = '<tr><td colspan="4">등록된 상품이 없습니다.</td></tr>';
                 return;
             }
             snapshot.forEach(doc => {
@@ -222,6 +229,9 @@ function initializeAdminPage() {
                 tr.innerHTML = `
                     <td>${product.name}</td>
                     <td>₩${product.price.toLocaleString()}</td>
+                    <td>
+                        <input type="checkbox" class="shipping-exempt-checkbox" data-id="${product.id}" ${product.shippingFeeExempt ? 'checked' : ''}>
+                    </td>
                     <td>
                         <button class="btn-secondary edit-product-btn" data-id="${product.id}">수정</button>
                         <button class="btn-danger delete-product-btn" data-id="${product.id}">삭제</button>
@@ -239,6 +249,18 @@ function initializeAdminPage() {
     productListAdmin.addEventListener('click', async (e) => {
         const target = e.target;
         const productId = target.dataset.id;
+
+        if (target.classList.contains('shipping-exempt-checkbox')) {
+            const isExempt = target.checked;
+            const productRef = doc(db, 'products', productId);
+            updateDoc(productRef, { shippingFeeExempt: isExempt }).catch(error => {
+                console.error('배송비 면제 상태 업데이트 중 오류 발생:', error);
+                alert('배송비 면제 상태 업데이트에 실패했습니다.');
+                // Revert the checkbox state on error
+                target.checked = !isExempt;
+            });
+            return; // Prevent other click handlers from running
+        }
 
         if (target.classList.contains('delete-product-btn')) {
             // 삭제 처리

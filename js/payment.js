@@ -65,6 +65,33 @@ document.addEventListener('DOMContentLoaded', () => {
         productSliderWrapper.style.transform = `translateX(-${currentSlideIndex * 100}%)`;
     }
 
+    async function calculateShippingFee(items) {
+        if (items.length === 0) {
+            return 0;
+        }
+
+        let hasNonExemptItem = false;
+        for (const item of items) {
+            const productRef = doc(db, 'products', item.id);
+            try {
+                const productSnap = await getDoc(productRef);
+                if (productSnap.exists()) {
+                    const productData = productSnap.data();
+                    if (!productData.shippingFeeExempt) {
+                        hasNonExemptItem = true;
+                        break; // 하나라도 비면제 상품이 있으면 더 이상 확인할 필요 없음
+                    }
+                }
+            } catch (error) {
+                console.error("상품 정보를 가져오는 중 오류 발생:", error);
+                // 오류 발생 시 기본적으로 배송비 부과
+                return 3000;
+            }
+        }
+
+        return hasNonExemptItem ? 3000 : 0;
+    }
+
     async function renderPaymentDetails() {
         if (itemsToPay.length === 0) {
             productSliderWrapper.innerHTML = '<p>주문할 상품이 없습니다.</p>';
@@ -97,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
 
         subtotalAmount = itemsToPay.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-        const shippingFee = 3000;
+        const shippingFee = await calculateShippingFee(itemsToPay);
         totalPaymentAmount = subtotalAmount + shippingFee - discountAmount;
         if (totalPaymentAmount < 0) totalPaymentAmount = 0; // Ensure total doesn't go negative
         
