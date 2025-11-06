@@ -236,9 +236,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const discountPercentage = coupon.discountPercentage;
-            discountAmount = subtotalAmount * (discountPercentage / 100);
-            
+            if (coupon.discountType === 'percentage') {
+                discountAmount = subtotalAmount * (coupon.discountValue / 100);
+                couponStatus.textContent = `${coupon.discountValue}% 할인 적용! (₩ ${formatNumber(discountAmount)})`;
+            } else if (coupon.discountType === 'amount') {
+                discountAmount = coupon.discountValue;
+                couponStatus.textContent = `₩${formatNumber(coupon.discountValue)} 할인 적용!`;
+            } else { // Fallback for old coupon structure
+                discountAmount = subtotalAmount * (coupon.discountPercentage / 100);
+                couponStatus.textContent = `${coupon.discountPercentage}% 할인 적용! (₩ ${formatNumber(discountAmount)})`;
+            }
+
             await updateDoc(doc(db, 'coupons', coupon.id), {
                 quantity: coupon.quantity - 1
             });
@@ -249,7 +257,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 usedAt: serverTimestamp()
             });
 
-            couponStatus.textContent = `${discountPercentage}% 할인 적용! (₩ ${formatNumber(discountAmount)})`;
             couponStatus.style.color = '#27ae60';
             renderPaymentDetails(); // Recalculate and render totals
 

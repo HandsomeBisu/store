@@ -313,7 +313,7 @@ function initializeAdminPage() {
     // --- 쿠폰 관리 기능 추가 ---
     const addCouponForm = document.getElementById('add-coupon-form');
     const couponCodeInput = document.getElementById('coupon-code');
-    const discountPercentageInput = document.getElementById('discount-percentage');
+    const discountValueInput = document.getElementById('discount-value');
     const couponQuantityInput = document.getElementById('coupon-quantity');
     const couponListAdmin = document.getElementById('coupon-list-admin');
 
@@ -328,10 +328,14 @@ function initializeAdminPage() {
             }
             snapshot.forEach(doc => {
                 const coupon = { id: doc.id, ...doc.data() };
+                const discountDisplay = coupon.discountType === 'percentage' 
+                    ? `${coupon.discountValue}%` 
+                    : `₩${coupon.discountValue.toLocaleString()}`;
+
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td>${coupon.code}</td>
-                    <td>${coupon.discountPercentage}%</td>
+                    <td>${discountDisplay}</td>
                     <td>${coupon.quantity}</td>
                     <td>
                         <button class="btn-danger delete-coupon-btn" data-id="${coupon.id}">삭제</button>
@@ -350,25 +354,35 @@ function initializeAdminPage() {
         e.preventDefault();
 
         const code = couponCodeInput.value.trim();
-        const discountPercentage = parseFloat(discountPercentageInput.value);
+        const discountType = document.querySelector('input[name="discount-type"]:checked').value;
+        const discountValue = parseFloat(discountValueInput.value);
         const quantity = parseInt(couponQuantityInput.value);
 
-        if (!code || isNaN(discountPercentage) || discountPercentage < 1 || discountPercentage > 100 || isNaN(quantity) || quantity < 1) {
-            alert('유효한 쿠폰 코드, 할인율(1-100%), 그리고 수량(1 이상)을 입력해주세요.');
+        if (!code || isNaN(discountValue) || isNaN(quantity) || quantity < 1) {
+            alert('유효한 쿠폰 코드, 할인 값, 수량을 입력해주세요.');
+            return;
+        }
+
+        if (discountType === 'percentage' && (discountValue < 1 || discountValue > 100)) {
+            alert('할인율은 1에서 100 사이여야 합니다.');
+            return;
+        }
+
+        if (discountType === 'amount' && discountValue < 1) {
+            alert('할인 금액은 1 이상이어야 합니다.');
             return;
         }
 
         try {
             await addDoc(collection(db, 'coupons'), {
                 code: code,
-                discountPercentage: discountPercentage,
+                discountType: discountType,
+                discountValue: discountValue,
                 quantity: quantity,
                 createdAt: serverTimestamp()
             });
             alert('쿠폰이 성공적으로 추가되었습니다.');
-            couponCodeInput.value = '';
-            discountPercentageInput.value = '';
-            couponQuantityInput.value = '';
+            addCouponForm.reset();
         } catch (error) {
             console.error('쿠폰 추가 중 오류 발생:', error);
             alert('쿠폰 추가에 실패했습니다.');
